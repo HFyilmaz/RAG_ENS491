@@ -1,0 +1,34 @@
+Number of annex,Number of paragraph,Tests,Samples
+,,,j
+-,6.*,General specifications: visual inspection,x
+5,-,Shape and dimensions: visual inspection,x
+10,-,"Heat:	48 h at 65 °C ± 20°C
+	Visual inspection for distortion","x
+x"
+6,-,"Colorimetry: visual inspection
+Trichromatic coordinates in case of doubt",x
+7,-,Photometry: limited to 20' and V = H = 0°,x
+7,-,Complete photometry,
+8,1.,"Water:	10 min. in normal position
+		10 min. in inverted position
+		visual inspection",
+8,3.,"Motor fuels:	5 min.
+		visual inspection",
+8,4.,"Oils:		5 min.
+		visual inspection",
+6,-,"Colorimetry: visual inspection
+Trichromatic coordinates in case of doubt",
+7,-,Photometry: limited to 20' and V = H = 0°,
+8,2.,"Corrosion:	24 hours
+		2 hours' interval
+		24 hours
+		visual inspection",
+8,5.,"Rear face:	1 min.
+		visual inspection",
+13,-,"Impact
+		visual inspection",
+6,-,"Colorimetry: visual inspection
+Trichromatic coordinates in case of doubt",
+7,-,Photometry: limited to 20' and V = H = 0°,
+14,2.,Deposit of samples with Authority,
+*  of the Regulation.,*  of the Regulation.,*  of the Regulation.,*  of the Regulation.

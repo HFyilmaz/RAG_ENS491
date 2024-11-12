@@ -1,0 +1,6 @@
+--- NOTES ---
+
+Tablodaki column sub columnlara ayırıldığı senaryoda hicbir türlü alınamıyor doğru biçimde
+
+Page level text extraction PDF için geçerli ->  PyMuPDF (also known as fitz) library in Python
+Each .docx file consists of paragraphs and tables, but not the exact page breaks as seen when rendered.
