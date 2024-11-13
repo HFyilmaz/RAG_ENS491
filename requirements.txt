@@ -5,4 +5,3 @@ langchain-chroma
 langchain-unstructured[local]
 unstructured[pdf]
 python-magic-bin
-

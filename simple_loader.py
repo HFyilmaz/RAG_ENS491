@@ -1,5 +1,6 @@
 from langchain_community.document_loaders import PyPDFLoader
 
+# Loads the data from the provided path of only one file.
 async def load_data_simple(file_path):
     loader = PyPDFLoader(file_path)
     pages = []
@@ -7,6 +8,7 @@ async def load_data_simple(file_path):
         pages.append(page)
     return pages
 
+# To test the code
 def run_simple(pages):
     for i in range(3, 5):
         print(f"{pages[i].metadata}\n")
