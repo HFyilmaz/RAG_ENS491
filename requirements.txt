@@ -1,8 +1,9 @@
 pypdf
 langchain
-langchain-community
+langchain-community>=0.3.7
 langchain-chroma
+langchain-ollama
+
 langchain-unstructured[local]
 unstructured[pdf]
 python-magic-bin
-
