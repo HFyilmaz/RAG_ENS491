@@ -1,1 +1,4 @@
 Word-Extraction/lang-chain-setup/.env
+langchain-modelapi/chroma_dbs
+langchain-modelapi/.ipynb_checkpoints
+langchain-modelapi/.env
