@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from .forms import FileUploadForm
 from .models import UploadedFile
-from .populator import populator
+from .vectordb import populator
 import subprocess  # To call the populate_database script
 
 import os
