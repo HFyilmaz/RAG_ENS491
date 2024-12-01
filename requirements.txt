@@ -2,4 +2,14 @@ pypdf
 langchain
 langchain-community>=0.3.7
 langchain-chroma
-langchain-ollama
+asgiref
+Django
+django-cors-headers
+djangorestframework
+djangorestframework-simplejwt
+PyJWT
+pytz
+sqlparse
+psycopg2-binary
+python-dotenv
+sentence-transformers

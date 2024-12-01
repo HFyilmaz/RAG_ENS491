@@ -4,28 +4,24 @@ import shutil
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.schema.document import Document
-from get_embedding_function import get_embedding_function
 from langchain_chroma import Chroma
 
+from sentence_transformers import SentenceTransformer
 
 CHROMA_PATH = "chroma"
 DATA_PATH = "data"
 
 
-def main():
-
-    # Check if the database should be cleared (using the --clear flag).
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--reset", action="store_true", help="Reset the database.")
-    args = parser.parse_args()
-    if args.reset:
-        print("✨ Clearing Database")
-        clear_database()
+def populator():
 
     # Create (or update) the data store.
-    documents = load_documents()
-    chunks = split_documents(documents)
-    add_to_chroma(chunks)
+    try:
+        documents = load_documents()
+        chunks = split_documents(documents)
+        add_to_chroma(chunks)
+        return "Success"
+    except Exception as e:
+        return f"Error: {e}"
 
 
 def load_documents():
@@ -105,9 +101,23 @@ def clear_database():
         shutil.rmtree(CHROMA_PATH)
 
 
-if __name__ == "__main__":
-    main()
+# Wrapper class to make SentenceTransformer compatible
+class EmbeddingWrapper:
+    def __init__(self, model_name='sentence-transformers/all-mpnet-base-v2'):
+        self.model = SentenceTransformer(model_name)
+    
+    # The vector store expects this method
+    def embed_documents(self, texts):
+        embeddings = self.model.encode(texts)
+        return embeddings.tolist()  # Ensure embeddings are a list, not an array
 
+    # Method to embed a single query
+    def embed_query(self, query):
+        return self.model.encode([query])[0]
+
+def get_embedding_function():
+    # Return an instance of the wrapper
+    return EmbeddingWrapper()
 
 #documents = load_documents()
 #chunks = split_documents(documents)

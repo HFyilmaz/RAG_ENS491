@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from .forms import FileUploadForm
 from .models import UploadedFile
+from .populator import populator
 import subprocess  # To call the populate_database script
 
 import os
@@ -32,15 +33,6 @@ def upload_file(request):
     return render(request, 'rag/upload_file.html', {'form': form})
 
 def populate_database(request):
-    try:
-        # Use the full path to `populate_database.py` in the `rag` directory
-        script_path = os.path.join(settings.BASE_DIR, 'rag', 'populate_database.py')
-
-        # Run the script using subprocess
-        subprocess.run(['python', script_path], check=True)
-
-        message = "Database populated successfully!"
-    except subprocess.CalledProcessError as e:
-        message = f"Error populating database: {e}"
+    message = populator()
 
     return render(request, 'rag/populate_database.html', {'message': message})
