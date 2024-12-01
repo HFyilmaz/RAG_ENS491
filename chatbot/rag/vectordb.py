@@ -18,8 +18,9 @@ def populator():
     try:
         documents = load_documents()
         chunks = split_documents(documents)
-        add_to_chroma(chunks)
-        return "Success"
+        # If new documents added, the message is set accordingly
+        message = add_to_chroma(chunks)
+        return message
     except Exception as e:
         return f"Error: {e}"
 
@@ -58,13 +59,14 @@ def add_to_chroma(chunks: list[Document]):
     for chunk in chunks_with_ids:
         if chunk.metadata["id"] not in existing_ids:
             new_chunks.append(chunk)
+    
 
+    message = "✅ No new documents to add" 
     if len(new_chunks):
-        print(f"👉 Adding new documents: {len(new_chunks)}")
+        message = f"👉 Adding new documents: {len(new_chunks)}"
         new_chunk_ids = [chunk.metadata["id"] for chunk in new_chunks]
         db.add_documents(new_chunks, ids=new_chunk_ids)
-    else:
-        print("✅ No new documents to add")
+    return message
 
 
 def calculate_chunk_ids(chunks):
