@@ -7,5 +7,6 @@ app_name = "rag"
 
 urlpatterns = [
     path('upload/', views.upload_file, name='upload_file'),
-    path('populate/', views.populate_database, name='populate_database'),
+    path('register/', views.register, name='register'),
+    path('login/', views.login, name='login'),
 ]

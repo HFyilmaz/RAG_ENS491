@@ -1,15 +1,22 @@
 import argparse
 import os
 import shutil
+from django.conf import settings
+
+
 from langchain_community.document_loaders import PyPDFDirectoryLoader
+
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.schema.document import Document
 from langchain_chroma import Chroma
 
 from sentence_transformers import SentenceTransformer
 
-CHROMA_PATH = "chroma"
-DATA_PATH = "data"
+## CURRENT WORKING DIRECTORY OF PYTHON SCRIPTS IS THE ROOT DIRECTORY OF THE PROJECT
+## THEREFORE WE NO LONGER CAN USE PATHS RELATIVE TO THE SCRIPTS PARENT DIRECTORY
+
+CHROMA_PATH = settings.CHROMA_PATH
+DATA_PATH = settings.DATA_PATH
 
 
 def populator():
