@@ -10,4 +10,5 @@ urlpatterns = [
     path('register/', auth.register, name='register'),
     path('login/', auth.login, name='login'),
     path('query/', llm.query, name='query'),
+    path('get_queries/', llm.get_queries, name='get_queries'),
 ]
