@@ -87,7 +87,7 @@ def calculate_chunk_ids(chunks):
     for chunk in chunks:
         source = chunk.metadata.get("source")
         page = chunk.metadata.get("page")
-        current_page_id = f"{source}:{page}"
+        current_page_id = f"{source}:{page+1}"
 
         # If the page ID is the same as the last one, increment the index.
         if current_page_id == last_page_id:

@@ -1,12 +1,13 @@
 from django.urls import path
 
-from . import views
+from .views import auth, file, llm
 
 
 app_name = "rag"
 
 urlpatterns = [
-    path('upload/', views.upload_file, name='upload_file'),
-    path('register/', views.register, name='register'),
-    path('login/', views.login, name='login'),
+    path('upload/', file.upload_file, name='upload_file'),
+    path('register/', auth.register, name='register'),
+    path('login/', auth.login, name='login'),
+    path('query/', llm.query, name='query'),
 ]
