@@ -10,6 +10,14 @@ from django.contrib.auth import authenticate
 ## Serializers to ensure input validation
 from ..serializers import UserSerializer
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_status(request):
+    user = request.user  # Get the current authenticated user
+    serializer = UserSerializer(user)  # Serialize the user object
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 @api_view(['POST'])
 def register(request):
     serializer = UserSerializer(data=request.data)  # Bind JSON data to the serializer.
