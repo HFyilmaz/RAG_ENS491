@@ -7,6 +7,8 @@ app_name = "rag"
 
 urlpatterns = [
     path('upload/', file.upload_file, name='upload_file'),
+    path('get_rag_files/', file.get_rag_files, name='get_rag_files'),
+    path('delete_rag_file/', file.delete_rag_file, name='delete_rag_file'),
     path('register/', auth.register, name='register'),
     path('login/', auth.login, name='login'),
     path('query/', llm.query, name='query'),

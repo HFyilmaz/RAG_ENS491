@@ -47,7 +47,8 @@ def login(request):
     return Response({
         "user": {
             "username": user.username,
-            "email": user.email
+            "email": user.email,
+            "role": user.role
         },
         "refresh": str(refresh),
         "access": str(access)

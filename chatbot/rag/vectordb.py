@@ -19,15 +19,16 @@ CHROMA_PATH = settings.CHROMA_PATH
 DATA_PATH = settings.DATA_PATH
 
 
-def populator():
 
+def populator():
+    clear_database()
     # Create (or update) the data store.
     try:
         documents = load_documents()
         chunks = split_documents(documents)
         # If new documents added, the message is set accordingly
-        message = add_to_chroma(chunks)
-        return message
+        is_changed = add_to_chroma(chunks)
+        return is_changed
     except Exception as e:
         return f"Error: {e}"
 
@@ -68,12 +69,13 @@ def add_to_chroma(chunks: list[Document]):
             new_chunks.append(chunk)
     
 
-    message = "✅ No new documents to add" 
     if len(new_chunks):
-        message = f"👉 Adding new documents: {len(new_chunks)}"
+        print(f"👉 Added new documents: {len(new_chunks)}")
         new_chunk_ids = [chunk.metadata["id"] for chunk in new_chunks]
         db.add_documents(new_chunks, ids=new_chunk_ids)
-    return message
+        return True
+    print("No new documents to add")
+    return False
 
 
 def calculate_chunk_ids(chunks):
