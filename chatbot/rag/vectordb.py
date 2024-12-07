@@ -21,7 +21,6 @@ DATA_PATH = settings.DATA_PATH
 
 
 def populator():
-    clear_database()
     # Create (or update) the data store.
     try:
         documents = load_documents()
