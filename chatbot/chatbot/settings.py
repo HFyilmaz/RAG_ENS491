@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',
     'rag',
 ]
 
@@ -79,6 +80,7 @@ REST_FRAMEWORK = {
     ),
 }
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -150,3 +152,26 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collected static file
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# CORS configuration
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins (Development)
+
+# OR for specific origins for Production!!
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5173",
+# ]
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
+
+CORS_ALLOW_HEADERS = [
+    "content-type",
+    "authorization",
+    "x-requested-with",
+]
