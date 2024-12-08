@@ -13,6 +13,13 @@ load_dotenv()
 hf_key = os.getenv("HuggingFace_KEY")
 repo_id = "mistralai/Mixtral-8x7B-Instruct-v0.1"
 
+# TODO: Needs to be set in the admin panel
+# closer to 0 -> more relevant yet lesser results
+SIMILARITY_THRESHOLD = 0.5
+
+# TODO: Needs to be set in the admin panel
+CLOSEST_K_CHUNK = 10
+
 model_kwargs = {
     "max_length": 128
 }
@@ -37,8 +44,18 @@ def query_llm(query_text: str):
     ---
     Answer the question based on the above context: {question}
     """
-    results = db.similarity_search_with_score(query_text, k=5)
-    context_text = "\n\n---\n\n".join([doc.page_content for doc,_score in results])
+    # Search the DB.
+    results = db.similarity_search_with_score(query_text, k=CLOSEST_K_CHUNK)
+
+    filtered_results = [
+        (doc, score) for doc, score in results if score <= SIMILARITY_THRESHOLD
+    ]
+
+    if filtered_results:
+        context_text = "\n\n---\n\n".join([doc.page_content for doc,_score in filtered_results])
+    else:
+        context_text = "There is nothing found in the application. Say user that you didn't find anything. Do not try to guess answer"
+
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     prompt= prompt_template.format(context=context_text, question=query_text)
     # Directing the prompt to the model

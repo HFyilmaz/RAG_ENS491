@@ -18,7 +18,9 @@ from sentence_transformers import SentenceTransformer
 CHROMA_PATH = settings.CHROMA_PATH
 DATA_PATH = settings.DATA_PATH
 
-
+# TODO: THESE NEEDS TO BE SET IN THE ADMIN PANEL
+CHUNK_SIZE = 500
+CHUNK_OVERLAP = 75
 
 def populator():
     # Create (or update) the data store.
@@ -39,8 +41,8 @@ def load_documents():
 
 def split_documents(documents: list[Document]):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=80,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP,
         length_function=len,
         is_separator_regex=False,
     )
@@ -66,7 +68,7 @@ def add_to_chroma(chunks: list[Document]):
     for chunk in chunks_with_ids:
         if chunk.metadata["id"] not in existing_ids:
             new_chunks.append(chunk)
-    
+
 
     if len(new_chunks):
         print(f"👉 Added new documents: {len(new_chunks)}")
@@ -78,7 +80,6 @@ def add_to_chroma(chunks: list[Document]):
 
 
 def calculate_chunk_ids(chunks):
-
     # This will create IDs like "data/monopoly.pdf:6:2"
     # Page Source : Page Number : Chunk Index
 
@@ -87,8 +88,8 @@ def calculate_chunk_ids(chunks):
 
     for chunk in chunks:
         source = chunk.metadata.get("source")
-        page = chunk.metadata.get("page")
-        current_page_id = f"{source}:{page+1}"
+        page = chunk.metadata.get("page") + 1  # Page numbers starts from 1 instead of 0
+        current_page_id = f"{source}:{page}"
 
         # If the page ID is the same as the last one, increment the index.
         if current_page_id == last_page_id:
