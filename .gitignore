@@ -5,4 +5,4 @@ chatbot/rag/data
 
 # DATABASES ARE IGNORED
 db.sqlite3
-chroma/
+chatbot/rag/chroma/
