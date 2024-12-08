@@ -11,6 +11,8 @@ from langchain_chroma import Chroma
 CHROMA_PATH = "chroma"
 DATA_PATH = "data"
 
+CHUNK_SIZE = 500
+CHUNK_OVERLAP = 75 # 15%
 
 def main():
 
@@ -35,8 +37,8 @@ def load_documents():
 
 def split_documents(documents: list[Document]):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=80,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP,
         length_function=len,
         is_separator_regex=False,
     )
@@ -81,7 +83,7 @@ def calculate_chunk_ids(chunks):
 
     for chunk in chunks:
         source = chunk.metadata.get("source")
-        page = chunk.metadata.get("page")
+        page = chunk.metadata.get("page") + 1 #Page numbers starts from 1 instead of 0
         current_page_id = f"{source}:{page}"
 
         # If the page ID is the same as the last one, increment the index.
