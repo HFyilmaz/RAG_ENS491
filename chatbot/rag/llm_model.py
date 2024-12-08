@@ -18,7 +18,7 @@ repo_id = "mistralai/Mixtral-8x7B-Instruct-v0.1"
 SIMILARITY_THRESHOLD = 0.5
 
 # TODO: Needs to be set in the admin panel
-CLOSEST_K_CHUNK = 10
+CLOSEST_K_CHUNK = 5
 
 model_kwargs = {
     "max_length": 128
