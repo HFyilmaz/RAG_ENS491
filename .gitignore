@@ -4,5 +4,6 @@ chatbot/rag/data
 .env
 
 # DATABASES ARE IGNORED
-db.sqlite3
 chatbot/rag/chroma/
+chatbot/db.sqlite3
+*.sqlite3
