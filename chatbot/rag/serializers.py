@@ -3,6 +3,7 @@ from rest_framework import serializers
 from .models import Query
 from .models import RagFile
 from .models import RagUser
+from .models import Conversation
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -19,13 +20,22 @@ class UserSerializer(serializers.ModelSerializer):
         return RagUser.objects.create_user(**validated_data)
 
 class QuerySerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
+    query_id = serializers.IntegerField(source='id')  # Map `id` to `query_id`
 
     class Meta:
         model = Query
-        fields = ['id', 'query_text', 'created_at', 'username', 'response_text']
+        fields = ['query_id', 'query_text', 'created_at', 'response_text']
 
+class ConversationSerializer(serializers.ModelSerializer):
+    # Nested representation of queries
+    queries = QuerySerializer(many=True, read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+    conversation_id = serializers.IntegerField(source='id')
 
+    class Meta:
+        model = Conversation
+        fields = ['conversation_id', 'created_at', 'last_modified', 'queries','username']
+  
 
 class RagFileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)

@@ -20,9 +20,23 @@ class UploadedFile(models.Model):
 
 class Query(models.Model):
     user = models.ForeignKey(RagUser, related_name='queries', on_delete=models.SET_NULL, null=True)
-    query_text = models.CharField(max_length=500)
+    query_text = models.TextField()
     response_text = models.TextField()  # for very large, unbounded text
     created_at = models.DateTimeField(auto_now_add=True)
+
+class Conversation(models.Model):
+    created_at = models.DateTimeField(null=True, blank=True)  # Set when the first query is added
+    last_modified = models.DateTimeField(null=True, blank=True)  # Set when a query is added or modified
+    queries = models.ManyToManyField('Query', related_name='conversations', blank=True)
+    user = models.ForeignKey(RagUser, related_name='conversations', on_delete=models.SET_NULL, null=True)
+
+
+    def update_timestamps(self):
+        queries = self.queries.order_by('created_at')
+        if queries.exists():
+            self.created_at = queries.first().created_at
+            self.last_modified = queries.last().created_at
+            self.save()
 
 
 class RagFile(models.Model):
