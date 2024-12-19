@@ -1,4 +1,4 @@
-from .vectordb import get_embedding_function, get_embedding_function_ollama
+from .vectordb import get_embedding_function
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_chroma import Chroma
@@ -38,7 +38,7 @@ llm_ollama = OllamaLLM(model="llama3.1")
 
 
 def query_llm(query_text: str):
-    embedding_function = get_embedding_function_ollama()
+    embedding_function = get_embedding_function()
     db = Chroma(
         persist_directory = settings.CHROMA_PATH,
         embedding_function = embedding_function
@@ -57,7 +57,6 @@ def query_llm(query_text: str):
         (doc, score) for doc, score in results if score <= SIMILARITY_THRESHOLD
     ]
 
-    #print(filtered_results)
 
     if filtered_results:
         context_text = "\n\n---\n\n".join([doc.page_content for doc,_score in filtered_results])

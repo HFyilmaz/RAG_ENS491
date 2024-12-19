@@ -8,6 +8,7 @@ from ..permissions import IsAdmin, IsUser
 
 import os
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
@@ -16,10 +17,10 @@ from rest_framework import status
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsAdmin])
-def delete_rag_file(request):
+def delete_rag_file(request, rag_file_id):
     try:
         # Find the RagFile object by its ID
-        rag_file = RagFile.objects.get(id=request.data.get("file_id"))
+        rag_file = RagFile.objects.get(id=rag_file_id)
         # Delete it from the folder
         RagFile.delete_rag_file_from_folder(rag_file.file_name)
 
