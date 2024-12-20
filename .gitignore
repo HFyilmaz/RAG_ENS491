@@ -2,8 +2,16 @@ env/
 chatbot/media/uploaded_files
 chatbot/rag/data
 .env
+.venv
 
 # DATABASES ARE IGNORED
 chatbot/rag/chroma/
 chatbot/db.sqlite3
 *.sqlite3
+
+# __pycache__ are ignored
+chatbot/rag/__pycache__/
+chatbot/rag/views/__pycache__/
+chatbot/chatbot/__pycache__/
+
+
