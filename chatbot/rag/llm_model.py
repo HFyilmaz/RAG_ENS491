@@ -77,9 +77,14 @@ def query_llm(query_text: str):
 
         # Extract sources
         sources = [doc.metadata.get("id", None) for doc, _score in filtered_results]
-        formatted_response_text = f"Response: {response_text}\nSources: {sources}"
 
-        return formatted_response_text
+        # Format the response in JSON format
+        formatted_response = {
+            "response": response_text.strip(),
+            "sources": sources
+        }
+
+        return formatted_response
 
     except Exception as e:
-        return f"An error occurred while processing the request: {e}"
+        return {"error": f"An error occurred while processing the request: {e}"}

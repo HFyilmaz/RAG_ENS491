@@ -1,3 +1,4 @@
+import json
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -14,8 +15,9 @@ from ..permissions import IsAdmin, IsUser
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def query(request):
-    query_text = request.data.get('query')  # Get username from request
+    query_text = request.data.get('query')  # Get query text from request
     conversation_id = request.data.get('conversation_id')
+    
     # Validate input
     if not query_text.strip():
         return Response({"error": "Your query is empty!"}, status=status.HTTP_400_BAD_REQUEST)
@@ -36,17 +38,29 @@ def query(request):
             user=request.user
         )
     
-    response = query_llm(query_text)
+    response_data = query_llm(query_text)
+    
+    if "error" in response_data:
+        return Response({"error": response_data["error"]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
     # Save the query to the database, associating it with the authenticated user
-    query_instance = Query.objects.create(user=request.user, query_text=query_text, response_text=response)
+    response_text = response_data.get("response", "")
+    sources = response_data.get("sources", [])
+    
+    # Combine response and sources into a single JSON string for storage
+    query_instance = Query.objects.create(
+        user=request.user, 
+        query_text=query_text, 
+        response_text=json.dumps(response_data)  # Store as JSON in the database
+    )
 
     # Adding the query to the conversation
     conversation.queries.add(query_instance)
+    
     # Updating the fields, "last_modified", and "created_at" depending on the newly added query(for last_modified especially)
     conversation.update_timestamps()
 
-    return Response({"response": response}, status=status.HTTP_200_OK)
-
+    return Response(response_data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
