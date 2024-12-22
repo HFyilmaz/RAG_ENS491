@@ -88,7 +88,7 @@ def query_llm(query_text: str, chat_history):
         ("system","The following is the context fetched from the database. Mention your sources if possible in your answer.: \n{context}\n"),
         ("system","The following is a friendly conversation between a human and an AI. If the AI does not know the answer to a question, it truthfully says it does not know."),
         MessagesPlaceholder(variable_name="chat_history"),
-        ("system","Respond only as the AI when addressed by the human. Do not generate messages for the Human tag or continue the conversation on their behalf\n"),
+        ("system","AI is instructed only to answer the below question using the conversation history and the context.\n"),
         ("human", "{input}"),
         ("ai","")
     ])
