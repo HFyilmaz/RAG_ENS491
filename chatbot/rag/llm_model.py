@@ -1,4 +1,4 @@
-from .vectordb import get_embedding_function
+from .vectordb import get_embedding_function, get_embedding_function_ollama
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_chroma import Chroma
@@ -12,6 +12,7 @@ from django.conf import settings
 from dotenv import load_dotenv
 import os
 
+# Load environment variables
 load_dotenv()
 
 

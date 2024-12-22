@@ -1,3 +1,4 @@
+import json
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -20,7 +21,7 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def query(request):
-    query_text = request.data.get('query')  # Get username from request
+    query_text = request.data.get('query')  # Get query text from request
     conversation_id = request.data.get('conversation_id')
     print(conversation_id)
     # Validate input
@@ -65,6 +66,7 @@ def query(request):
 
     # Adding the query to the conversation
     conversation.queries.add(query_instance)
+    
     # Updating the fields, "last_modified", and "created_at" depending on the newly added query(for last_modified especially)
     conversation.update_timestamps()
 
