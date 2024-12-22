@@ -24,7 +24,7 @@ def search(request):
         )
     
     # Perform the search
-    search_results = perform_search(query_text)
+    search_results = perform_search(query_text, request)
     
     # Check for errors
     if "error" in search_results:
@@ -36,7 +36,7 @@ def search(request):
     search_instance = Search.objects.create(
         user=request.user,
         search_text=query_text,
-        response_text=json.dumps(search_results)
+        response_text=search_results
     )
 
     search_history, created = SearchHistory.objects.get_or_create(user=request.user)
