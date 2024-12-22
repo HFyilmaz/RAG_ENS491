@@ -38,6 +38,27 @@ class Conversation(models.Model):
             self.last_modified = queries.last().created_at
             self.save()
 
+class Search(models.Model):
+    user = models.ForeignKey(RagUser, related_name='searches', on_delete=models.SET_NULL, null=True)
+    search_text = models.TextField()
+    response_text = models.JSONField()  # Store the entire search response as JSON
+    created_at = models.DateTimeField(auto_now_add=True)
+
+'''    class Meta:
+        ordering = ['-created_at']  # Order by most recent first'''
+
+class SearchHistory(models.Model):
+    user = models.ForeignKey(RagUser, related_name='search_history', on_delete=models.SET_NULL, null=True)
+    searches = models.ManyToManyField('Search', related_name='search_history', blank=True)
+    created_at = models.DateTimeField(null=True, blank=True)
+    last_modified = models.DateTimeField(null=True, blank=True)
+
+    def update_timestamps(self):
+        searches = self.searches.order_by('created_at')
+        if searches.exists():
+            self.created_at = searches.first().created_at
+            self.last_modified = searches.last().created_at
+            self.save()
 
 class RagFile(models.Model):
     id = models.AutoField(primary_key=True)

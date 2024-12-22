@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from matching.search import perform_search
+from ..models import Search, SearchHistory
+from ..serializers import SearchSerializer
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -31,4 +33,39 @@ def search(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     
+    search_instance = Search.objects.create(
+        user=request.user,
+        search_text=query_text,
+        response_text=json.dumps(search_results)
+    )
+
+    search_history, created = SearchHistory.objects.get_or_create(user=request.user)
+    search_history.searches.add(search_instance)
+    search_history.update_timestamps()
+
     return Response(search_results, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_search_history(request):
+    """
+    API endpoint that allows users to retrieve their search history.
+    """
+    searches = Search.objects.filter(user=request.user).order_by('-created_at')
+    serializer = SearchSerializer(searches, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_search_history(request):
+    """
+    API endpoint that allows users to delete their entire search history.
+    """
+    # Delete all searches associated with the user
+    Search.objects.filter(user=request.user).delete()
+    
+    # Also delete the SearchHistory instance if it exists
+    SearchHistory.objects.filter(user=request.user).delete()
+    
+    return Response(status=status.HTTP_204_NO_CONTENT)
+

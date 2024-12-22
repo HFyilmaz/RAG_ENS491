@@ -16,5 +16,7 @@ urlpatterns = [
     path('queries/', llm.get_queries, name='get_queries'),
     path('conversations/',llm.get_conversations, name='get_conversations'),
     path('conversations/<int:conversation_id>/', llm.get_conversation, name='get_conversation'),
-    path('search/', matching.search, name='search')
+    path('search/', matching.search, name='search'),
+    path('search_history/', matching.get_search_history, name='get_search_history'),
+    path('delete_search_history/', matching.delete_search_history, name='delete_search_history')
 ]
