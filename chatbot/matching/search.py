@@ -3,6 +3,7 @@ from whoosh.query import Phrase
 from whoosh import qparser
 import re
 from django.conf import settings
+from django.urls import reverse
 import os
 
 
@@ -37,7 +38,7 @@ def correct_query(index_path, query_string):
             return corrected.string
     return None
 
-def search_keyword(index_path, keyword):
+def search_keyword(index_path, keyword, request=None):
     """Search the Whoosh index for the given keyword as an exact phrase."""
     index = open_dir(index_path)
     keyword = clean_query(keyword)
@@ -50,15 +51,17 @@ def search_keyword(index_path, keyword):
         for hit in hits:
             raw_snippet = hit.highlights("content")
             clean_snippet = remove_html_tags(raw_snippet)
+            file_path = request.build_absolute_uri(f"/media/rag_database/{hit['filename']}")
             results.append({
                 "filename": hit["filename"],
                 "page_num": hit["page_num"],
-                "snippet": clean_snippet
+                "snippet": clean_snippet,
+                "file_url": file_path
             })
     
     return results
 
-def perform_search(query_text):
+def perform_search(query_text, request=None):
     """Main function to perform search with corrections and suggestions."""
     try:
         index_path = settings.INDEX_PATH
@@ -68,10 +71,10 @@ def perform_search(query_text):
         
         if corrected_query:
             # Search with original query
-            results = search_keyword(index_path, corrected_query)
+            results = search_keyword(index_path, corrected_query, request)
         else:
             # Search with original query
-            results = search_keyword(index_path, query_text)
+            results = search_keyword(index_path, query_text, request)
         
         response = {
             "results": results,

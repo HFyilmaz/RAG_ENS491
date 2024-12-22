@@ -24,7 +24,7 @@ def search(request):
         )
     
     # Perform the search
-    search_results = perform_search(query_text)
+    search_results = perform_search(query_text, request)
     
     # Check for errors
     if "error" in search_results:
