@@ -3,6 +3,7 @@ chatbot/media/uploaded_files
 chatbot/rag/data
 .env
 .venv
+venv/
 
 # DATABASES ARE IGNORED
 chatbot/rag/chroma/
