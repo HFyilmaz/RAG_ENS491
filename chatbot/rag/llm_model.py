@@ -1,4 +1,4 @@
-from .vectordb import get_embedding_function, get_embedding_function_ollama
+from .vectordb import get_embedding_function
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_chroma import Chroma
