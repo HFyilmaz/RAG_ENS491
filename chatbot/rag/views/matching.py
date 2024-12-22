@@ -36,7 +36,7 @@ def search(request):
     search_instance = Search.objects.create(
         user=request.user,
         search_text=query_text,
-        response_text=json.dumps(search_results)
+        response_text=search_results
     )
 
     search_history, created = SearchHistory.objects.get_or_create(user=request.user)

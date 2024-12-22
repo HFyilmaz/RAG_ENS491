@@ -51,7 +51,7 @@ def query(request):
     query_instance = Query.objects.create(
         user=request.user, 
         query_text=query_text, 
-        response_text=json.dumps(response_data)  # Store as JSON in the database
+        response_text=response_data  # Store as JSON in the database
     )
 
     # Adding the query to the conversation
