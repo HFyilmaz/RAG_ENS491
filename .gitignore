@@ -1,8 +1,9 @@
 env/
-chatbot/media/rag_database
+chatbot/media/rag_database/
 chatbot/rag/data
 .env
 venv/
+.venv
 
 # DATABASES ARE IGNORED
 chatbot/rag/chroma/
