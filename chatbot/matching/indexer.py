@@ -5,8 +5,8 @@ from whoosh.fields import Schema, TEXT, ID
 from whoosh.analysis import RegexTokenizer, LowercaseFilter
 from django.conf import settings
 
-index_path = settings.INDEX_PATH
-DATA_PATH = settings.DATA_PATH
+'''index_path = settings.INDEX_PATH    # Might be redundant
+DATA_PATH = settings.DATA_PATH      # Might be redundant'''
 
 def create_whoosh_index(index_path):
     """Creates a Whoosh index if it doesn't exist."""

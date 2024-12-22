@@ -2,6 +2,8 @@ from whoosh.index import open_dir
 from whoosh.query import Phrase
 from whoosh import qparser
 import re
+from django.conf import settings
+import os
 
 
 def clean_query(query):
@@ -56,45 +58,31 @@ def search_keyword(index_path, keyword):
     
     return results
 
-
-
-if __name__ == "__main__":
-    index_path = './whoosh_index'  # This is the folder where the Whoosh index is stored
-
-    keyword = input("Enter an exact phrase to search for: ")
-    
-    # Correct the query before performing the search
-    corrected_query = correct_query(index_path, keyword)
-    if corrected_query:
-        print(f"Did you mean: {corrected_query}?")
-        user_response = input("Press Y to search with the corrected query, or press any other key to continue with the original query: ").strip().lower()
-        if user_response == 'y':
-            keyword = corrected_query
-    
-    results = search_keyword(index_path, keyword)
-    
-    if results:
-        print("\nMatched Documents:")
-        matched_files = set()
-        for result in results:
-            matched_files.add(result['filename'])
+def perform_search(query_text):
+    """Main function to perform search with corrections and suggestions."""
+    try:
+        index_path = settings.INDEX_PATH
         
-        for i, file in enumerate(matched_files):
-            print(f"{i+1}. {file}")
-
-        print("\n\n")
-
-        print("\nMatching Results:")
-        for i, result in enumerate(results):
-            print(f"{i+1}. File: {result['filename']} | Page: {result['page_num']}")
-            print(f"   Snippet: {result['snippet']}\n")
-            print("--------------------------------------------\n")
-    else:
-        print("\nNo results found.")
+        # First try to correct the query
+        corrected_query = correct_query(index_path, query_text)
         
-        # Suggest possible corrections if no results found
-        suggestions = suggest_corrections(index_path, keyword)
-        if suggestions:
-            print("\nDid you mean one of these?:")
-            for i, suggestion in enumerate(suggestions):
-                print(f"{i+1}. {suggestion}")
+        if corrected_query:
+            # Search with original query
+            results = search_keyword(index_path, corrected_query)
+        else:
+            # Search with original query
+            results = search_keyword(index_path, query_text)
+        
+        response = {
+            "results": results,
+        }
+        
+        # If no results found, add suggestions
+        if not results:
+            suggestions = suggest_corrections(index_path, query_text)
+            response["suggestions"] = suggestions
+            
+        return response
+        
+    except Exception as e:
+        return {"error": str(e)}
