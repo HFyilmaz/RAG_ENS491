@@ -14,6 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
+from matching.indexer import index_pdfs
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsAdmin])
@@ -81,21 +82,35 @@ def upload_file(request):
     if len(success_files) > 0:
         success_files = ",".join(success_files)
 
-        is_vectordb_changed = populator()  # Run your database population logic
-        ## SYNC RagFile model to update the database as we add new data to the folder
-        RagFile.sync_rag_files(request.user)
-
-
-        if is_vectordb_changed:
-            return Response(
-            {"message": f"{success_files} files uploaded successfully.",
-            "error_files": f"{error_files}"},
-            status=status.HTTP_201_CREATED
-        )
-
-        else:
-             return Response({"message": "The files are already in the vector database."}, status=status.HTTP_400_BAD_REQUEST)
+        # Run vector database population
+        is_vectordb_changed = populator()
         
-    else:
+        try:
+            # Create Whoosh index for the uploaded files
+            index_pdfs(settings.INDEX_PATH, settings.DATA_PATH)
+            
+            # Sync RagFile model
+            RagFile.sync_rag_files(request.user)
 
-        return Response({"message": "Files could not be uploaded", "error_files": error_files}, status=status.HTTP_400_BAD_REQUEST)
+            if is_vectordb_changed:
+                return Response({
+                    "message": f"{success_files} files uploaded successfully and indexed.",
+                    "error_files": error_files
+                }, status=status.HTTP_201_CREATED)
+            else:
+                return Response({
+                    "message": "Files are already in the vector database but were indexed for search.",
+                    "error_files": error_files
+                }, status=status.HTTP_200_OK)
+                
+        except Exception as e:
+            return Response({
+                "message": "Files uploaded but indexing failed",
+                "error": str(e),
+                "error_files": error_files
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response({
+            "message": "Files could not be uploaded", 
+            "error_files": error_files
+        }, status=status.HTTP_400_BAD_REQUEST)
