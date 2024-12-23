@@ -4,6 +4,7 @@ chatbot/rag/data
 .env
 venv/
 .venv
+venv/
 
 # DATABASES ARE IGNORED
 chatbot/rag/chroma/
