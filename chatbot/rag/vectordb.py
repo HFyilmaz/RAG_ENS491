@@ -134,7 +134,6 @@ def get_embedding_function():
 #chunks = split_documents(documents)
 #print(chunks[0])
 
-
 from langchain_ollama import OllamaEmbeddings
 
 

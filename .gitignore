@@ -1,7 +1,8 @@
 env/
-chatbot/media/uploaded_files
+chatbot/media/rag_database/
 chatbot/rag/data
 .env
+venv/
 .venv
 venv/
 

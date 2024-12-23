@@ -21,7 +21,7 @@ class UploadedFile(models.Model):
 class Query(models.Model):
     user = models.ForeignKey(RagUser, related_name='queries', on_delete=models.SET_NULL, null=True)
     query_text = models.TextField()
-    response_text = models.JSONField()  # for very large, unbounded text
+    response_text = models.TextField()  # for very large, unbounded text
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Conversation(models.Model):
@@ -87,5 +87,3 @@ class RagFile(models.Model):
             os.remove(file_path)
         
         return f"File '{file_name}' deleted successfully."
-
-

@@ -1,4 +1,3 @@
-import json
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -12,12 +11,18 @@ from ..serializers import QuerySerializer
 from ..serializers import ConversationSerializer
 from ..permissions import IsAdmin, IsUser
 
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+
+
+
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def query(request):
     query_text = request.data.get('query')  # Get query text from request
     conversation_id = request.data.get('conversation_id')
-    
+    print(conversation_id)
     # Validate input
     if not query_text.strip():
         return Response({"error": "Your query is empty!"}, status=status.HTTP_400_BAD_REQUEST)
@@ -37,22 +42,26 @@ def query(request):
             last_modified=None,
             user=request.user
         )
+    # Access the queries JSON field
+    queries = conversation.queries.all() 
     
-    response_data = query_llm(query_text)
-    
-    if "error" in response_data:
-        return Response({"error": response_data["error"]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+    # Initialize chat history
+    chat_history = []
+
+    # Loop through the queries and populate chat history
+    if len(queries) == 0:
+        chat_history.append(SystemMessage(content="No conversation history is available."))
+    for query in queries:
+        human_input = query.query_text
+        ai_response = query.response_text
+
+        # Append HumanMessage and AIMessage to chat_history
+        chat_history.append(HumanMessage(content=human_input))
+        chat_history.append(AIMessage(content=ai_response))
+
+    response = query_llm(query_text, chat_history)
     # Save the query to the database, associating it with the authenticated user
-    response_text = response_data.get("response", "")
-    sources = response_data.get("sources", [])
-    
-    # Combine response and sources into a single JSON string for storage
-    query_instance = Query.objects.create(
-        user=request.user, 
-        query_text=query_text, 
-        response_text=response_data  # Store as JSON in the database
-    )
+    query_instance = Query.objects.create(user=request.user, query_text=query_text, response_text=response["response_text"])
 
     # Adding the query to the conversation
     conversation.queries.add(query_instance)
@@ -60,7 +69,13 @@ def query(request):
     # Updating the fields, "last_modified", and "created_at" depending on the newly added query(for last_modified especially)
     conversation.update_timestamps()
 
-    return Response(response_data, status=status.HTTP_200_OK)
+    response["conversation_id"] = conversation.id
+    response["query_id"] = query_instance.id
+
+
+
+    return Response(response, status=status.HTTP_200_OK)
+
 
 
 @api_view(['GET'])
