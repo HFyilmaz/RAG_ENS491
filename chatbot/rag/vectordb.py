@@ -58,7 +58,7 @@ def add_to_chroma(chunks: list[Document]):
 
     # Load the existing database.
     db = Chroma(
-        persist_directory=CHROMA_PATH, embedding_function=get_embedding_function_ollama()
+        persist_directory=CHROMA_PATH, embedding_function=get_embedding_function()
     )
 
     # Calculate Page IDs.
@@ -140,9 +140,9 @@ def get_embedding_function():
 #chunks = split_documents(documents)
 #print(chunks[0])
 
-from langchain_ollama import OllamaEmbeddings
+# from langchain_ollama import OllamaEmbeddings
 
 
-def get_embedding_function_ollama():
-    embeddings = OllamaEmbeddings(model="nomic-embed-text")
-    return embeddings
+# def get_embedding_function_ollama():
+#     embeddings = OllamaEmbeddings(model="nomic-embed-text")
+#     return embeddings

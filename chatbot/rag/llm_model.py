@@ -1,4 +1,4 @@
-from .vectordb import get_embedding_function_ollama
+from .vectordb import get_embedding_function
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_chroma import Chroma
@@ -16,10 +16,10 @@ import os
 load_dotenv()
 
 
-'''
+
 hf_key = os.getenv("HuggingFace_KEY")
 repo_id = "mistralai/Mixtral-8x7B-Instruct-v0.1"
-'''
+
 #repo_id ="Qwen/Qwen2.5-72B-Instruct"
 # TODO: Needs to be set in the admin panel
 # closer to 0 -> more relevant yet lesser results
@@ -27,18 +27,18 @@ repo_id = "mistralai/Mixtral-8x7B-Instruct-v0.1"
 
 # TODO: Needs to be set in the admin panel
 #CLOSEST_K_CHUNK = 5
-'''
+
 model = HuggingFaceEndpoint(
         repo_id=repo_id,
         temperature=0.5,
         model_kwargs={"max_length": 128},
         huggingfacehub_api_token=hf_key,
     )
-'''
 
-# To run on local machine with Ollama (ollama needs to be installed)
-from langchain_ollama import OllamaLLM
-llm_ollama = OllamaLLM(model="llama3.1")
+
+# # To run on local machine with Ollama (ollama needs to be installed)
+# from langchain_ollama import OllamaLLM
+# llm_ollama = OllamaLLM(model="llama3.1")
 
 def get_context(vector_db, query_text, CLOSEST_K_CHUNK: int = 3, SIMILARITY_THRESHOLD: float = 0.3):
     # Search the DB.
@@ -86,7 +86,7 @@ def get_context(vector_db, query_text, CLOSEST_K_CHUNK: int = 3, SIMILARITY_THRE
     # return context
 
 def query_llm(query_text: str, chat_history):
-    embedding_function = get_embedding_function_ollama()
+    embedding_function = get_embedding_function()
     db = Chroma(
         persist_directory = settings.CHROMA_PATH,
         embedding_function = embedding_function
@@ -108,7 +108,7 @@ def query_llm(query_text: str, chat_history):
 
     
     try:
-        response = llm_ollama.invoke(prompt)
+        response = model.invoke(prompt)
     except Exception as e:
         print("Error invoking chain:", e)
     return {"response_text":response, "sources":context_obj["sources"]}
