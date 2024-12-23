@@ -4,7 +4,7 @@ from .models import Query
 from .models import RagFile
 from .models import RagUser
 from .models import Conversation
-
+from .models import Search
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)  # Ensure the password is not exposed in responses.
@@ -25,6 +25,11 @@ class QuerySerializer(serializers.ModelSerializer):
     class Meta:
         model = Query
         fields = ['query_id', 'query_text', 'created_at', 'response_text']
+
+class SearchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Search
+        fields = ['id', 'search_text', 'response_text', 'created_at']
 
 class ConversationSerializer(serializers.ModelSerializer):
     # Nested representation of queries

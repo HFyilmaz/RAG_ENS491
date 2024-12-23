@@ -50,6 +50,12 @@ def split_documents(documents: list[Document]):
 
 
 def add_to_chroma(chunks: list[Document]):
+    # Modify the source to include only the file name and append it to the base URL.
+    for chunk in chunks:
+        source = chunk.metadata.get("source")
+        if source:
+            chunk.metadata["source"] = f"http://127.0.0.1:8000/media/rag_database/{os.path.basename(source)}"
+
     # Load the existing database.
     db = Chroma(
         persist_directory=CHROMA_PATH, embedding_function=get_embedding_function()
@@ -134,11 +140,9 @@ def get_embedding_function():
 #chunks = split_documents(documents)
 #print(chunks[0])
 
-"""
-from langchain_ollama import OllamaEmbeddings
+# from langchain_ollama import OllamaEmbeddings
 
 
-def get_embedding_function_ollama():
-    embeddings = OllamaEmbeddings(model="nomic-embed-text")
-    return embeddings
-"""
+# def get_embedding_function_ollama():
+#     embeddings = OllamaEmbeddings(model="nomic-embed-text")
+#     return embeddings

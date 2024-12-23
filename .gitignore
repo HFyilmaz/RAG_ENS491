@@ -1,8 +1,21 @@
 env/
-chatbot/media/uploaded_files
+chatbot/media/rag_database/
 chatbot/rag/data
 .env
 venv/
+.venv
+venv/
+
 # DATABASES ARE IGNORED
-db.sqlite3
 chatbot/rag/chroma/
+chatbot/db.sqlite3
+*.sqlite3
+chatbot/matching/whoosh_index/
+
+# __pycache__ are ignored
+chatbot/rag/__pycache__/
+chatbot/rag/views/__pycache__/
+chatbot/chatbot/__pycache__/
+chatbot/matching/__pycache__/
+
+
