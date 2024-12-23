@@ -69,7 +69,9 @@ def query(request):
     # Updating the fields, "last_modified", and "created_at" depending on the newly added query(for last_modified especially)
     conversation.update_timestamps()
 
-    
+    response["conversation_id"] = conversation.id
+    response["query_id"] = query_instance.id
+
 
 
     return Response(response, status=status.HTTP_200_OK)
