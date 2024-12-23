@@ -3,8 +3,7 @@
 ### Run the following command to install dependencies:
 #### pip install -r requirements.txt
 
-# This branch uses embeddings and LLM model from an external API
-# No local model needs to be downloaded.
+# This branch uses embeddings and LLM model locally
 
 # Current API's
 ### /chatbot/register
@@ -27,4 +26,9 @@
 ### /chatbot/upload_file
 #### Requires Authentication
 #### Expects form-data with "file" field
+
+### /chatbot/search
+#### Expects JSON Data with "search"
+#### Returns the list of all files that contain the search query
+
 

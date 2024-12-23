@@ -15,3 +15,5 @@ python-dotenv
 sentence-transformers
 timedelta
 langchain_huggingface
+whoosh
+pdfplumber
