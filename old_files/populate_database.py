@@ -1,37 +1,31 @@
 import argparse
 import os
 import shutil
-from django.conf import settings
-
-
 from langchain_community.document_loaders import PyPDFDirectoryLoader
-
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.schema.document import Document
+from get_embedding_function import get_embedding_function
 from langchain_chroma import Chroma
 
-from sentence_transformers import SentenceTransformer
 
-## CURRENT WORKING DIRECTORY OF PYTHON SCRIPTS IS THE ROOT DIRECTORY OF THE PROJECT
-## THEREFORE WE NO LONGER CAN USE PATHS RELATIVE TO THE SCRIPTS PARENT DIRECTORY
+CHROMA_PATH = "../chroma"
+DATA_PATH = "data"
 
-CHROMA_PATH = settings.CHROMA_PATH
-DATA_PATH = settings.DATA_PATH
 
-# TODO: THESE NEEDS TO BE SET IN THE ADMIN PANEL
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 75
+def main():
 
-def populator():
+    # Check if the database should be cleared (using the --clear flag).
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--reset", action="store_true", help="Reset the database.")
+    args = parser.parse_args()
+    if args.reset:
+        print("✨ Clearing Database")
+        clear_database()
+
     # Create (or update) the data store.
-    try:
-        documents = load_documents()
-        chunks = split_documents(documents)
-        # If new documents added, the message is set accordingly
-        is_changed = add_to_chroma(chunks)
-        return is_changed
-    except Exception as e:
-        return f"Error: {e}"
+    documents = load_documents()
+    chunks = split_documents(documents)
+    add_to_chroma(chunks)
 
 
 def load_documents():
@@ -41,8 +35,8 @@ def load_documents():
 
 def split_documents(documents: list[Document]):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=CHUNK_SIZE,
-        chunk_overlap=CHUNK_OVERLAP,
+        chunk_size=800,
+        chunk_overlap=80,
         length_function=len,
         is_separator_regex=False,
     )
@@ -50,15 +44,9 @@ def split_documents(documents: list[Document]):
 
 
 def add_to_chroma(chunks: list[Document]):
-    # Modify the source to include only the file name and append it to the base URL.
-    for chunk in chunks:
-        source = chunk.metadata.get("source")
-        if source:
-            chunk.metadata["source"] = f"http://127.0.0.1:8000/media/rag_database/{os.path.basename(source)}"
-
     # Load the existing database.
     db = Chroma(
-        persist_directory=CHROMA_PATH, embedding_function=get_embedding_function_ollama()
+        persist_directory=CHROMA_PATH, embedding_function=get_embedding_function()
     )
 
     # Calculate Page IDs.
@@ -75,17 +63,16 @@ def add_to_chroma(chunks: list[Document]):
         if chunk.metadata["id"] not in existing_ids:
             new_chunks.append(chunk)
 
-
     if len(new_chunks):
-        print(f"👉 Added new documents: {len(new_chunks)}")
+        print(f"👉 Adding new documents: {len(new_chunks)}")
         new_chunk_ids = [chunk.metadata["id"] for chunk in new_chunks]
         db.add_documents(new_chunks, ids=new_chunk_ids)
-        return True
-    print("No new documents to add")
-    return False
+    else:
+        print("✅ No new documents to add")
 
 
 def calculate_chunk_ids(chunks):
+
     # This will create IDs like "data/monopoly.pdf:6:2"
     # Page Source : Page Number : Chunk Index
 
@@ -94,7 +81,7 @@ def calculate_chunk_ids(chunks):
 
     for chunk in chunks:
         source = chunk.metadata.get("source")
-        page = chunk.metadata.get("page") + 1  # Page numbers starts from 1 instead of 0
+        page = chunk.metadata.get("page")
         current_page_id = f"{source}:{page}"
 
         # If the page ID is the same as the last one, increment the index.
@@ -118,31 +105,10 @@ def clear_database():
         shutil.rmtree(CHROMA_PATH)
 
 
-# Wrapper class to make SentenceTransformer compatible
-class EmbeddingWrapper:
-    def __init__(self, model_name='sentence-transformers/all-mpnet-base-v2'):
-        self.model = SentenceTransformer(model_name)
-    
-    # The vector store expects this method
-    def embed_documents(self, texts):
-        embeddings = self.model.encode(texts)
-        return embeddings.tolist()  # Ensure embeddings are a list, not an array
+if __name__ == "__main__":
+    main()
 
-    # Method to embed a single query
-    def embed_query(self, query):
-        return self.model.encode([query])[0]
-
-def get_embedding_function():
-    # Return an instance of the wrapper
-    return EmbeddingWrapper()
 
 #documents = load_documents()
 #chunks = split_documents(documents)
 #print(chunks[0])
-
-from langchain_ollama import OllamaEmbeddings
-
-
-def get_embedding_function_ollama():
-    embeddings = OllamaEmbeddings(model="nomic-embed-text")
-    return embeddings
