@@ -3,13 +3,32 @@
 ### Run the following command to install dependencies:
 #### pip install -r requirements.txt
 
-# Installing ollama
-#### ollama pull llama3.1 (or ollama run llama3.1)
-#### ollama pull nomic-embed-text
+# This branch uses embeddings and LLM model locally
 
-# Populating Database
-### Run the following command when new file is added to data
-#### python .\populate_database.py   
+# Current API's
+### /chatbot/register
+#### Expects JSON Data with "username", "email", and "password"
+#### Returns user-related data
 
-# Querry
-#### python .\query_data.py "(querry text)"
+### /chatbot/login
+#### Expects JSON Data with "username" and "password"
+#### Returns user-related data, refresh token and access token
+
+### /chatbot/query
+#### Requires Authentication
+#### Expects JSON Data with "query"
+#### Returns the model response
+
+### /chatbot/get_queries
+#### Requires Authentication
+#### Returns the list of all queries performed by the authenticated requesting user
+
+### /chatbot/upload_file
+#### Requires Authentication
+#### Expects form-data with "file" field
+
+### /chatbot/search
+#### Expects JSON Data with "search"
+#### Returns the list of all files that contain the search query
+
+
