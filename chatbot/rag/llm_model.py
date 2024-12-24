@@ -40,7 +40,7 @@ model = HuggingFaceEndpoint(
 from langchain_ollama import OllamaLLM
 llm_ollama = OllamaLLM(model="llama3.1")
 
-def get_context(vector_db, query_text, CLOSEST_K_CHUNK: int = 3, SIMILARITY_THRESHOLD: float = 0.3):
+def get_context(vector_db, query_text, CLOSEST_K_CHUNK: int = 5, SIMILARITY_THRESHOLD: float = 0.5):
     # Search the DB.
     results = vector_db.similarity_search_with_score(query_text, k=CLOSEST_K_CHUNK)
 
