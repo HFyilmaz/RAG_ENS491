@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from ..forms import FileUploadForm
 from ..models import UploadedFile
 from ..models import RagFile 
-from ..vectordb import populator
+from ..vectordb import populator, delete_file_from_chroma
 from ..serializers import RagFileSerializer
 from ..permissions import IsAdmin, IsUser
 
@@ -14,7 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from matching.elastic_search import setup_elasticsearch, index_pdf_content, clear_index
+from matching.elastic_search import setup_elasticsearch, index_pdf_content, clear_index, delete_file_from_elasticsearch
 import pdfplumber
 
 @api_view(['DELETE'])
@@ -23,18 +23,29 @@ def delete_rag_file(request, rag_file_id):
     try:
         # Find the RagFile object by its ID
         rag_file = RagFile.objects.get(id=rag_file_id)
+        
         # Delete it from the folder
         RagFile.delete_rag_file_from_folder(rag_file.file_name)
 
+        # Delete from vector database and elasticsearch
+        chroma_deleted = delete_file_from_chroma(rag_file.file_name)
+        es_deleted = delete_file_from_elasticsearch(rag_file.file_name)
+
+        if not chroma_deleted or not es_deleted:
+            return Response(
+                {"error": "Error deleting from databases"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
         # Delete the file record
         rag_file.delete()
-
-        # TODO: DELETE ALSO FROM THE VECTOR DATABASE
 
         return Response({"message": f"File {rag_file.file_name} deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
     except RagFile.DoesNotExist:
         return Response({"error": "File not found."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": f"Error deleting file: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 

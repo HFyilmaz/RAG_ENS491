@@ -21,3 +21,4 @@ chatbot/rag/views/__pycache__/
 chatbot/chatbot/__pycache__/
 chatbot/matching/__pycache__/
 
+.DS_Store

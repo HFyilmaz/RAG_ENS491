@@ -48,7 +48,7 @@ pdf_analyzer = analyzer('pdf_analyzer',
 
 class PDFDocument(Document):
     """Elasticsearch document mapping for PDF content"""
-    filename = Text()
+    filename = Text(fields={'raw': Text(analyzer='keyword')})  # Add raw field for exact matching
     page_num = Integer()
     content = Text(analyzer=pdf_analyzer)
     
@@ -80,6 +80,37 @@ def index_pdf_content(filename, page_num, content):
         return True
     except Exception as e:
         print(f"Error indexing document: {e}")
+        return False
+
+def delete_file_from_elasticsearch(filename):
+    """Delete all documents for a given filename from Elasticsearch"""
+    try:
+        # Get the Elasticsearch client
+        client = get_elasticsearch_client()
+        if not client:
+            print("Failed to get Elasticsearch client")
+            return False
+
+        # Delete by query to remove all documents matching the exact filename
+        response = client.delete_by_query(
+            index=PDFDocument._index._name,
+            body={
+                "query": {
+                    "term": {
+                        "filename.raw": filename  # Use the raw field for exact matching
+                    }
+                }
+            },
+            refresh=True  # Make sure the index is refreshed after deletion
+        )
+        
+        # Check if the deletion was successful
+        deleted_count = response.get('deleted', 0)
+        if deleted_count > 0:
+            return True
+        return False
+    except Exception as e:
+        print(f"Error deleting documents from Elasticsearch: {e}")
         return False
 
 def search_content(query_text, request=None):
@@ -117,7 +148,7 @@ def search_content(query_text, request=None):
         
         # Add highlighting
         s = s.highlight('content', 
-            fragment_size=50,
+            fragment_size=25,
             number_of_fragments=3,
             pre_tags=['<mark>'],
             post_tags=['</mark>']
