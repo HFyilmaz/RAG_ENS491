@@ -68,6 +68,31 @@ def setup_elasticsearch():
         print(f"Error setting up Elasticsearch: {e}")
         return False
 
+def file_exists_in_elasticsearch(filename):
+    """Check if any document exists with the given filename"""
+    try:
+        client = get_elasticsearch_client()
+        if not client:
+            print("Failed to get Elasticsearch client")
+            return False
+
+        response = client.search(
+            index=PDFDocument._index._name,
+            body={
+                "query": {
+                    "term": {
+                        "filename.raw": filename
+                    }
+                },
+                "size": 1
+            }
+        )
+        
+        return response['hits']['total']['value'] > 0
+    except Exception as e:
+        print(f"Error checking file existence in Elasticsearch: {e}")
+        return False
+
 def index_pdf_content(filename, page_num, content):
     """Index a single page of PDF content"""
     try:

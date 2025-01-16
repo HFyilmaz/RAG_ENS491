@@ -14,7 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from matching.elastic_search import setup_elasticsearch, index_pdf_content, clear_index, delete_file_from_elasticsearch
+from matching.elastic_search import setup_elasticsearch, index_pdf_content, delete_file_from_elasticsearch, file_exists_in_elasticsearch
 import pdfplumber
 
 @api_view(['DELETE'])
@@ -77,6 +77,7 @@ def upload_file(request):
 
     errors = []
     success_files = []
+    existing_files = []
     error_files = []
 
     # Ensure Elasticsearch is set up
@@ -88,6 +89,12 @@ def upload_file(request):
     for file in files:
         filename = file.name
         try:
+            # Check if file already exists in Elasticsearch
+            if file_exists_in_elasticsearch(filename):
+                print(f"File {filename} already exists in Elasticsearch, skipping")
+                existing_files.append(filename)
+                continue
+
             # Save the file to the rag_database directory
             file_path = os.path.join(settings.DATA_PATH, filename)
             with open(file_path, 'wb+') as destination:
@@ -110,35 +117,40 @@ def upload_file(request):
             error_files.append(filename)
             print(f"Error processing {filename}: {e}")
 
-    if len(success_files) > 0:
-        success_files_str = ",".join(success_files)
+    # Prepare response message
+    if len(success_files) > 0 or len(existing_files) > 0:
+        response_message = []
+        if success_files:
+            response_message.append(f"Successfully uploaded and indexed: {', '.join(success_files)}")
+        if existing_files:
+            response_message.append(f"Already indexed (skipped): {', '.join(existing_files)}")
         
-        # Run vector database population
-        is_vectordb_changed = populator()
+        # Run vector database population only if there are new files
+        if success_files:
+            is_vectordb_changed = populator()
+            try:
+                # Sync RagFile model
+                RagFile.sync_rag_files(request.user)
+            except Exception as e:
+                return Response({
+                    "message": "Files uploaded but model sync failed",
+                    "error": str(e),
+                    "error_files": error_files
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        try:
-            # Sync RagFile model
-            RagFile.sync_rag_files(request.user)
-
-            if is_vectordb_changed:
-                return Response({
-                    "message": f"{success_files_str} files uploaded successfully and indexed.",
-                    "error_files": error_files
-                }, status=status.HTTP_201_CREATED)
-            else:
-                return Response({
-                    "message": "Files are already in the vector database but were indexed for search.",
-                    "error_files": error_files
-                }, status=status.HTTP_200_OK)
-                
-        except Exception as e:
-            return Response({
-                "message": "Files uploaded but indexing failed",
-                "error": str(e),
-                "error_files": error_files
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({
+            "message": " | ".join(response_message),
+            "success_files": success_files,
+            "existing_files": existing_files,
+            "error_files": error_files
+        }, status=status.HTTP_200_OK)
+    
+    elif error_files:
+        return Response({
+            "message": "All files failed to upload",
+            "error_files": error_files
+        }, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({
-            "message": "Files could not be uploaded", 
-            "error_files": error_files
+            "message": "No files were processed",
         }, status=status.HTTP_400_BAD_REQUEST)
