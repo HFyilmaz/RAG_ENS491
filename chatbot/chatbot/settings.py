@@ -42,7 +42,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DATA_PATH = os.path.join(BASE_DIR, 'media', 'rag_database')
 CHROMA_PATH = os.path.join(BASE_DIR, 'rag', 'chroma')
-INDEX_PATH = os.path.join(BASE_DIR, 'matching', 'whoosh_index')
 # Add the parent directory to PYTHONPATH
 sys.path.append(os.path.join(BASE_DIR, 'matching'))
 
@@ -71,6 +70,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'rag',
+    'django_elasticsearch_dsl',
 ]
 
 SIMPLE_JWT = {
@@ -179,3 +179,12 @@ CORS_ALLOW_HEADERS = [
     "authorization",
     "x-requested-with",
 ]
+
+# Elasticsearch configuration
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': ['http://localhost:9200'],
+        'verify_certs': False,
+        'ssl_show_warn': False
+    },
+}

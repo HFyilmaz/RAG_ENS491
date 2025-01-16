@@ -1,11 +1,8 @@
-from whoosh.index import open_dir
-from whoosh.query import Phrase
-from whoosh import qparser
 import re
 from django.conf import settings
 from django.urls import reverse
 import os
-
+from .elastic_search import search_content, index_pdf_content
 
 def clean_query(query):
     """Cleans the user's input query to normalize it for phrase searching."""
@@ -19,71 +16,22 @@ def remove_html_tags(text):
     clean_text = re.sub(r'<.*?>', '', text)
     return clean_text
 
-def suggest_corrections(index_path, keyword):
-    """Suggest corrections for the user's query using the Whoosh spelling corrector."""
-    index = open_dir(index_path)
-    with index.searcher() as searcher:
-        corrector = searcher.corrector("content")
-        suggestions = corrector.suggest(keyword, limit=3)
-    return suggestions
-
-def correct_query(index_path, query_string):
-    """Attempt to correct the user's query using Whoosh's correct_query method."""
-    index = open_dir(index_path)
-    with index.searcher() as searcher:
-        qp = qparser.QueryParser("content", index.schema)
-        query = qp.parse(query_string)
-        corrected = searcher.correct_query(query, query_string)
-        if corrected.query != query:
-            return corrected.string
-    return None
-
-def search_keyword(index_path, keyword, request=None):
-    """Search the Whoosh index for the given keyword as an exact phrase."""
-    index = open_dir(index_path)
-    keyword = clean_query(keyword)
-    results = []
-    
-    with index.searcher() as searcher:
-        # Use a Phrase query to search for the exact phrase
-        phrase_query = Phrase("content", keyword.split())
-        hits = searcher.search(phrase_query, limit=None)  # Remove limit to see all results
-        for hit in hits:
-            raw_snippet = hit.highlights("content")
-            clean_snippet = remove_html_tags(raw_snippet)
-            file_path = request.build_absolute_uri(f"/media/rag_database/{hit['filename']}")
-            results.append({
-                "filename": hit["filename"],
-                "page_num": hit["page_num"],
-                "snippet": clean_snippet,
-                "file_url": file_path
-            })
-    
-    return results
-
 def perform_search(query_text, request=None):
-    """Main function to perform search with corrections and suggestions."""
+    """Main function to perform search using Elasticsearch."""
     try:
-        index_path = settings.INDEX_PATH
+        # Clean the query
+        query_text = clean_query(query_text)
         
-        # First try to correct the query
-        corrected_query = correct_query(index_path, query_text)
-        
-        if corrected_query:
-            # Search with original query
-            results = search_keyword(index_path, corrected_query, request)
-        else:
-            # Search with original query
-            results = search_keyword(index_path, query_text, request)
+        # Perform the search using Elasticsearch
+        results = search_content(query_text, request)
         
         response = {
             "results": results,
         }
         
-        # If no results found, add suggestions
+        # If no results found, we could implement suggestions here
         if not results:
-            suggestions = suggest_corrections(index_path, query_text)
-            response["suggestions"] = suggestions
+            response["suggestions"] = []
             
         return response
         

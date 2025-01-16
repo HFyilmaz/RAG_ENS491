@@ -14,7 +14,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from matching.indexer import index_pdfs
+from matching.elastic_search import setup_elasticsearch, index_pdf_content, clear_index
+import pdfplumber
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsAdmin])
@@ -54,6 +55,9 @@ def get_rag_files(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsAdmin]) 
 def upload_file(request):
+    # Ensure the rag_database directory exists
+    os.makedirs(settings.DATA_PATH, exist_ok=True)
+    
     # Get the list of files uploaded
     files = request.FILES.getlist('file')
     
@@ -64,37 +68,50 @@ def upload_file(request):
     success_files = []
     error_files = []
 
+    # Ensure Elasticsearch is set up
+    if not setup_elasticsearch():
+        return Response({
+            "error": "Failed to setup Elasticsearch"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     for file in files:
         filename = file.name
-        uploaded_file = UploadedFile(file=file)
-
-        # Create a form instance for each file
-        form = FileUploadForm(data=request.POST, files={'file': file})
         try:
-            # Save the file instance
-            uploaded_file.save()
+            # Save the file to the rag_database directory
+            file_path = os.path.join(settings.DATA_PATH, filename)
+            with open(file_path, 'wb+') as destination:
+                for chunk in file.chunks():
+                    destination.write(chunk)
             success_files.append(filename)
+            
+            # Index the file in Elasticsearch
+            try:
+                with pdfplumber.open(file_path) as pdf:
+                    for i, page in enumerate(pdf.pages):
+                        page_text = page.extract_text()
+                        if page_text:
+                            index_pdf_content(filename, i + 1, page_text)
+            except Exception as e:
+                print(f"Error indexing {filename}: {e}")
+                error_files.append(filename)
+                
         except Exception as e:
             error_files.append(filename)
+            print(f"Error processing {filename}: {e}")
 
-    
-    # Run the populator function if at least one file is successfully uploaded
     if len(success_files) > 0:
-        success_files = ",".join(success_files)
-
+        success_files_str = ",".join(success_files)
+        
         # Run vector database population
         is_vectordb_changed = populator()
         
         try:
-            # Create Whoosh index for the uploaded files
-            index_pdfs(settings.INDEX_PATH, settings.DATA_PATH)
-            
             # Sync RagFile model
             RagFile.sync_rag_files(request.user)
 
             if is_vectordb_changed:
                 return Response({
-                    "message": f"{success_files} files uploaded successfully and indexed.",
+                    "message": f"{success_files_str} files uploaded successfully and indexed.",
                     "error_files": error_files
                 }, status=status.HTTP_201_CREATED)
             else:
