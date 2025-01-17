@@ -6,8 +6,11 @@ from elasticsearch import Elasticsearch
 import time
 
 #TODO:
-# - Add Multi-level phrase matching
-# - Improve the response structure
+# 1. By default, searches return only the top 10 matching hits. 
+# (https://www.elastic.co/guide/en/elasticsearch/reference/8.11/paginate-search-results.html)
+# 2. Calculation of the score should be clear. 
+# (https://www.one-tab.com/page/P9mPf495Squ9ngKmZdbYKg)
+
 
 def get_elasticsearch_client():
     """Get Elasticsearch client with retries"""
@@ -137,10 +140,20 @@ def delete_file_from_elasticsearch(filename):
         print(f"Error deleting documents from Elasticsearch: {e}")
         return False
 
-def search_content(query_text, request=None):
-    """Search indexed PDF content with advanced features"""
+def search_content(query_text, request=None, minimum_score=0.25):
+    """Search indexed PDF content with advanced features
+    
+    Args:
+        query_text (str): The text to search for
+        request: The HTTP request object
+        minimum_score (float): Minimum score threshold (0 to 1). Higher values mean more relevant results.
+                             Defaults to 0.25 for moderate filtering.
+    """
     try:
         s = PDFDocument.search()
+        
+        # Set size to a large number to get all results
+        s = s.extra(size=10000)  # This will return up to 10,000 results
         
         # Combine exact phrase matching with fuzzy matching
         s = s.query(
@@ -182,30 +195,37 @@ def search_content(query_text, request=None):
         response = s.execute()
         
         results = []
-        for hit in response:
-            file_path = request.build_absolute_uri(f"/media/rag_database/{hit.filename}")
+        if len(response) > 0:
+            # Get the maximum score to normalize scores to 0-1 range
+            max_score = response[0].meta.score
             
-            # Get highlighted snippets or fall back to content
-            if hasattr(hit.meta, 'highlight') and hasattr(hit.meta.highlight, 'content'):
-                snippet = '...'.join(hit.meta.highlight.content)
-            else:
-                snippet = hit.content[:200] + '...' if len(hit.content) > 200 else hit.content
+            for hit in response:
+                # Normalize the score to 0-1 range
+                normalized_score = hit.meta.score / max_score
                 
-            results.append({
-                "filename": hit.filename,
-                "page_num": hit.page_num,
-                "snippet": snippet,
-                "file_url": file_path,
-                "score": hit.meta.score  # Add relevance score
-            })
+                # Only include results that meet the minimum score threshold
+                if normalized_score >= minimum_score:
+                    file_path = request.build_absolute_uri(f"/media/rag_database/{hit.filename}")
+                    
+                    if hasattr(hit.meta, 'highlight') and hasattr(hit.meta.highlight, 'content'):
+                        snippet = '...'.join(hit.meta.highlight.content)
+                    else:
+                        snippet = hit.content[:200] + '...' if len(hit.content) > 200 else hit.content
+                    
+                    results.append({
+                        "filename": hit.filename,
+                        "page_num": hit.page_num,
+                        "snippet": snippet,
+                        "file_url": file_path,
+                        "score": round(normalized_score, 2)
+                    })
         
-        # Sort results by score
         results.sort(key=lambda x: x['score'], reverse=True)
-        
         return results
     except Exception as e:
         print(f"Error searching documents: {e}")
         return []
+
 
 def clear_index():
     """Clear all indexed documents"""
