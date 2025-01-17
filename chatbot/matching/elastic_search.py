@@ -7,7 +7,6 @@ import time
 
 #TODO:
 # - Add Multi-level phrase matching
-# - Add Search Suggestions
 # - Improve the response structure
 
 def get_elasticsearch_client():
@@ -173,7 +172,7 @@ def search_content(query_text, request=None):
         
         # Add highlighting
         s = s.highlight('content', 
-            fragment_size=25,
+            fragment_size=75,
             number_of_fragments=3,
             pre_tags=['<mark>'],
             post_tags=['</mark>']
