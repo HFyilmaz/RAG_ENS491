@@ -6,12 +6,15 @@ from django.shortcuts import get_object_or_404
 from matching.search import perform_search
 from ..models import Search, SearchHistory
 from ..serializers import SearchSerializer
+from itertools import groupby
+from operator import itemgetter
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def search(request):
     """
     API endpoint that allows users to search through the document database.
+    Groups results by filename and maintains score-based ordering within groups.
     """
     query_text = request.data.get('search')
     
@@ -23,27 +26,60 @@ def search(request):
         )
     
     # Perform the search
-
-    search_results = perform_search(query_text, request)
+    search_response = perform_search(query_text, request)
+    
     
     # Check for errors
-    if "error" in search_results:
+    if isinstance(search_response, dict) and "error" in search_response:
         return Response(
-            {"error": search_results["error"]}, 
+            {"error": search_response["error"]}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+    # Extract results from the response
+    if not isinstance(search_response, dict) or 'results' not in search_response:
+        return Response(
+            {"error": "Invalid search response format"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+    search_results = search_response['results']
+    
+    if not search_results:
+        return Response({'results': []}, status=status.HTTP_200_OK)
+
+    # Sort results by filename and then by score in descending order
+    sorted_results = sorted(search_results, key=lambda x: (x['filename'], -x['score']))
+    
+    # Group results by filename
+    grouped_results = []
+    for filename, group in groupby(sorted_results, key=itemgetter('filename')):
+        group_list = list(group)
+        # Sort the group by score in descending order
+        group_list.sort(key=lambda x: x['score'], reverse=True)
+        grouped_results.append({
+            'filename': filename,
+            'matches': group_list
+        })
+    
+    # Sort groups by the highest score in each group
+    grouped_results.sort(key=lambda x: max(item['score'] for item in x['matches']), reverse=True)
+    
+    response_data = {
+        'results': grouped_results
+    }
     
     search_instance = Search.objects.create(
         user=request.user,
         search_text=query_text,
-        response_text=search_results
+        response_text=response_data
     )
 
     search_history, created = SearchHistory.objects.get_or_create(user=request.user)
     search_history.searches.add(search_instance)
     search_history.update_timestamps()
 
-    return Response(search_results, status=status.HTTP_200_OK)
+    return Response(response_data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

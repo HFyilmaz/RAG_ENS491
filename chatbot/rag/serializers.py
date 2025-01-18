@@ -21,10 +21,18 @@ class UserSerializer(serializers.ModelSerializer):
 
 class QuerySerializer(serializers.ModelSerializer):
     query_id = serializers.IntegerField(source='id')  # Map `id` to `query_id`
-
+    sources = serializers.SerializerMethodField() # Defining custom field
+    
     class Meta:
         model = Query
-        fields = ['query_id', 'query_text', 'created_at', 'response_text']
+        fields = ['query_id', 'query_text', 'created_at', 'response_text', 'sources']
+
+    def get_sources(self, obj):
+        """
+        Split the `sources` comma-separated string into a list.
+        Handle empty or null values gracefully.
+        """
+        return obj.sources.split(",") if obj.sources else []
 
 class SearchSerializer(serializers.ModelSerializer):
     class Meta:
