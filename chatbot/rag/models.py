@@ -23,7 +23,8 @@ class Query(models.Model):
     query_text = models.TextField()
     response_text = models.TextField()  # for very large, unbounded text
     created_at = models.DateTimeField(auto_now_add=True)
-
+    sources = models.TextField()
+    
 class Conversation(models.Model):
     created_at = models.DateTimeField(null=True, blank=True)  # Set when the first query is added
     last_modified = models.DateTimeField(null=True, blank=True)  # Set when a query is added or modified

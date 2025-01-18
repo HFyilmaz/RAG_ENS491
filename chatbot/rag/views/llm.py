@@ -61,7 +61,8 @@ def query(request):
 
     response = query_llm(query_text, chat_history)
     # Save the query to the database, associating it with the authenticated user
-    query_instance = Query.objects.create(user=request.user, query_text=query_text, response_text=response["response_text"])
+    comma_seperated_sources = ",".join(response["sources"])
+    query_instance = Query.objects.create(user=request.user, query_text=query_text, response_text=response["response_text"], sources=comma_seperated_sources)
 
     # Adding the query to the conversation
     conversation.queries.add(query_instance)
@@ -110,3 +111,17 @@ def get_conversation(request, conversation_id):
     serializer = ConversationSerializer(conversation)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated, IsAdmin])
+def delete_conversation(request, conversation_id):
+    
+    conversation = get_object_or_404(Conversation, id=conversation_id, user=request.user)
+
+
+    conversation.delete()
+
+
+    return Response({"message": f"Conversation with id {conversation_id} deleted successfully."}, status=status.HTTP_200_OK)
+
+    
