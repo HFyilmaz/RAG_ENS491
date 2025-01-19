@@ -155,32 +155,13 @@ def search_content(query_text, request=None, minimum_score=0.25):
         # Set size to a large number to get all results
         s = s.extra(size=10000)  # This will return up to 10,000 results
         
-        # Combine exact phrase matching with fuzzy matching
+        # Use a simpler query structure focusing on phrase matching
         s = s.query(
-            'bool',
-            should=[
-                # Exact phrase matching with high boost
-                {
-                    'match_phrase': {
-                        'content': {
-                            'query': query_text,
-                            'boost': 10,  # Give highest priority to exact phrases
-                            'slop': 1  # Allow only 1 word between phrase terms
-                        }
-                    }
-                },
-                # Fuzzy matching as fallback with lower boost
-                {
-                    'multi_match': {
-                        'query': query_text,
-                        'fields': ['content^2', 'filename'],
-                        'fuzziness': 'AUTO',
-                        'minimum_should_match': '75%',
-                        'boost': 1  # Lower priority for fuzzy matches
-                    }
-                }
-            ],
-            minimum_should_match=1  # At least one should clause must match
+            'match_phrase', 
+            content={
+                'query': query_text,
+                'slop': 1,  # Allow minimal flexibility in word positions
+            }
         )
         
         # Add highlighting with dynamic fragments
