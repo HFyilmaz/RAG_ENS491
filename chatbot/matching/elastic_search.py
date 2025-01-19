@@ -183,12 +183,18 @@ def search_content(query_text, request=None, minimum_score=0.25):
             minimum_should_match=1  # At least one should clause must match
         )
         
-        # Add highlighting
+        # Add highlighting with dynamic fragments
         s = s.highlight('content', 
-            fragment_size=75,
-            number_of_fragments=3,
+            fragment_size=150,  # Size of each fragment
+            number_of_fragments=-1,  # Return limited but sufficient number of fragments
             pre_tags=['<mark>'],
-            post_tags=['</mark>']
+            post_tags=['</mark>'],
+            require_field_match=True,
+            boundary_scanner='sentence',
+            boundary_scanner_locale='en-US',
+            type='unified',  # Use unified highlighter for better fragment selection
+            boundary_max_scan=150,  # Maximum characters to scan for boundary
+            no_match_size=0  # Don't return fragments that don't match
         )
         
         # Execute search
