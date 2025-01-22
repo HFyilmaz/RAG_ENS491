@@ -55,7 +55,7 @@ SECRET_KEY = 'django-insecure-%#&l0uz7v4!s$v^q-6g1eqwree9orp%#db7bkb@f%tx7_y$bvk
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -161,12 +161,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React development server
     "http://127.0.0.1:5173",
+    "http://frontend_app:8080"
 ]
 
 # Elasticsearch configuration
 ELASTICSEARCH_DSL = {
     'default': {
-        'hosts': ['http://localhost:9200'],
+        'hosts': ['http://elasticsearch:9200'],
         'verify_certs': False,
         'ssl_show_warn': False
     },
