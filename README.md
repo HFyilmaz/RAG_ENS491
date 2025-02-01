@@ -93,3 +93,15 @@ pip install -r requirements.txt
 3. Files will be automatically indexed in Elasticsearch
 4. Use the search functionality to find content within PDFs
 
+
+
+# DOCKER GUIDE
+
+## Navigate to the same directory where docker-compose.yml is.
+
+## Make sure in docker-compose.yml file, the context fields points to the source folder for both projects. Adjust it accordingly if frontend is in the different folder for you.
+
+## Run the following commands
+
+- docker compose build
+- docker compose up

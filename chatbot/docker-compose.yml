@@ -35,7 +35,14 @@ services:
       timeout: 5s
       retries: 5
 
-
+  frontend:
+    build:
+      context: ../../RAG-FRONTEND/chatbot  # Path to your React app
+    container_name: frontend_app
+    ports:
+      - "80:80"  # Map React's production port to host
+    depends_on:
+      - django
 volumes:
   es_data:
 
