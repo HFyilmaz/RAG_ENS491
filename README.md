@@ -105,3 +105,5 @@ pip install -r requirements.txt
 
 - docker compose build
 - docker compose up
+
+### Things may get cached. So to have a fresh start you can use "docker compose build --no-cache"
