@@ -1,3 +1,5 @@
+from langchain_ollama import OllamaLLM
+
 from .vectordb import get_embedding_function
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_core.prompts import ChatPromptTemplate
@@ -27,19 +29,21 @@ repo_id = "mistralai/Mistral-7B-Instruct-v0.3"
 
 # TODO: Needs to be set in the admin panel
 #CLOSEST_K_CHUNK = 5
-
+'''
 model = HuggingFaceEndpoint(
         repo_id=repo_id,
         temperature=0.5,
         model_kwargs={"max_length": 128},
         huggingfacehub_api_token=hf_key,
     )
+'''
+
 
 '''
 # To run on local machine with Ollama (ollama needs to be installed)
 from langchain_ollama import OllamaLLM
-llm_ollama = OllamaLLM(model="llama3.1")
 '''
+llm_ollama = OllamaLLM(model="llama3.1", base_url="http://ollama:11434")
 def get_context(vector_db, query_text, CLOSEST_K_CHUNK: int = 5, SIMILARITY_THRESHOLD: float = 0.5):
     # Search the DB.
     results = vector_db.similarity_search_with_score(query_text, k=CLOSEST_K_CHUNK)
@@ -108,7 +112,7 @@ def query_llm(query_text: str, chat_history):
 
     
     try:
-        response = model.invoke(prompt)
+        response = llm_ollama.invoke(prompt)
     except Exception as e:
         print("Error invoking chain:", e)
     return {"response_text":response, "sources":context_obj["sources"]}

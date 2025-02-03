@@ -1,4 +1,4 @@
-
+version: "3.9"
 services:
   django:
     build:
@@ -8,19 +8,20 @@ services:
       - "8000:8000"  # Map host port 8000 to container port 8000
     depends_on:
       - elasticsearch  # Ensure Elasticsearch starts before Django
+      - ollama        # Also depend on Ollama so it’s available
     environment:
       - ELASTICSEARCH_HOST=http://elasticsearch:9200  # Use the service name
+      - OLLAMA_API_BASE=http://ollama:11434            # (Optional) Pass the API endpoint for your integration
     volumes:
       - .:/app  # Mount project directory
 
-
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1  # Use a compatible version
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
-      - xpack.security.enabled=false  # Disable security for simplicity (dev mode)
+      - xpack.security.enabled=false
     ulimits:
       memlock:
         soft: -1
@@ -28,7 +29,7 @@ services:
     volumes:
       - es_data:/usr/share/elasticsearch/data
     ports:
-      - "9200:9200"  # Expose Elasticsearch on port 9200
+      - "9200:9200"
     healthcheck:
       test: curl -s http://localhost:9200/_cluster/health || exit 1
       interval: 10s
@@ -37,12 +38,25 @@ services:
 
   frontend:
     build:
-      context: ../../RAG-FRONTEND/chatbot  # Path to your React app
+      context: ../../RAG-FRONTEND/chatbot
     container_name: frontend_app
     ports:
-      - "80:80"  # Map React's production port to host
+      - "80:80"
     depends_on:
       - django
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
 volumes:
   es_data:
-

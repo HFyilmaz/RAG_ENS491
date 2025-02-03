@@ -107,3 +107,12 @@ pip install -r requirements.txt
 - docker compose up
 
 ### Things may get cached. So to have a fresh start you can use "docker compose build --no-cache"
+
+## For Ollama model setup
+
+### When containers are running
+- docker exec -it ollama ollama pull llama3.1
+- docker exec -it ollama ollama pull nomic-embed-text
+
+### To see pulled models
+- docker exec -it ollama ollama list

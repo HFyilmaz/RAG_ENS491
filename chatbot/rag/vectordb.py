@@ -58,7 +58,7 @@ def add_to_chroma(chunks: list[Document]):
 
     # Load the existing database.
     db = Chroma(
-        persist_directory=CHROMA_PATH, embedding_function=get_embedding_function()
+        persist_directory=CHROMA_PATH, embedding_function=get_embedding_function_ollama()
     )
 
     # Calculate Page IDs.
@@ -140,19 +140,19 @@ def get_embedding_function():
 #chunks = split_documents(documents)
 #print(chunks[0])
 
-#from langchain_ollama import OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings
 
-'''
+
 def get_embedding_function_ollama():
-    embeddings = OllamaEmbeddings(model="nomic-embed-text")
+    embeddings = OllamaEmbeddings(model="nomic-embed-text",base_url="http://ollama:11434")
     return embeddings
-'''
+
 def delete_file_from_chroma(filename):
     """Delete all chunks for a given filename from Chroma database"""
     try:
         db = Chroma(
             persist_directory=CHROMA_PATH,
-            embedding_function=get_embedding_function()
+            embedding_function=get_embedding_function_ollama()
         )
         # Get all document IDs that start with the file URL
         file_url = f"http://127.0.0.1:8000/media/rag_database/{filename}"
