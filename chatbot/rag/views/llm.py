@@ -9,7 +9,7 @@ from ..models import Conversation
 from ..llm_model import query_llm
 from ..serializers import QuerySerializer
 from ..serializers import ConversationSerializer
-from ..permissions import IsAdmin, IsUser
+from ..permissions import IsAdmin
 
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 

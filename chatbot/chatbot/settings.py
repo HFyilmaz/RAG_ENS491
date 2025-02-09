@@ -14,6 +14,9 @@ from pathlib import Path
 from datetime import timedelta
 import os
 import sys
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -68,6 +71,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_rest_passwordreset',
     'corsheaders',
     'rag',
     'django_elasticsearch_dsl',
@@ -135,12 +139,22 @@ AUTH_USER_MODEL = 'rag.RagUser'
 
 
 
+
+
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_HOST_USER = os.getenv("EMAIL_ADDR")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_APP_PASSW")
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Istanbul'
 
 USE_I18N = True
 

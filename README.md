@@ -107,3 +107,12 @@ pip install -r requirements.txt
 - docker compose up
 
 ### Things may get cached. So to have a fresh start you can use "docker compose build --no-cache"
+
+
+
+# PASSWORD RESET UPDATE GUIDE
+## There is a new requirement so make sure you also installed through "pip install -r requirements.txt"
+
+## In .env file make sure you define the keys for "EMAIL_ADDR" and "EMAIL_ADDR_PASSW". You could search on the Internet about how to obtain an app password for your Gmail account.
+
+## Based on the documentation, the reset link is valid for 24 for hours by default. (could be changed by setting DJANGO_REST_MULTITOKENAUTH_RESET_TOKEN_EXPIRY_TIME variable)

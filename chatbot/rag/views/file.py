@@ -4,7 +4,7 @@ from ..models import UploadedFile
 from ..models import RagFile 
 from ..vectordb import populator, delete_file_from_chroma
 from ..serializers import RagFileSerializer
-from ..permissions import IsAdmin, IsUser
+from ..permissions import IsAdmin
 
 import os
 from django.conf import settings
