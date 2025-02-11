@@ -1,7 +1,6 @@
-from django.urls import path
+from django.urls import path, include
 
-from .views import auth, file, llm, matching
-
+from .views import auth, file, llm, matching, management
 
 app_name = "rag"
 
@@ -19,5 +18,9 @@ urlpatterns = [
     path('conversations/delete/<int:conversation_id>', llm.delete_conversation, name='delete_conversation'),
     path('search/', matching.search, name='search'),
     path('search_history/', matching.get_search_history, name='get_search_history'),
-    path('delete_search_history/', matching.delete_search_history, name='delete_search_history')
+    path('delete_search_history/', matching.delete_search_history, name='delete_search_history'),
+    path('users/', management.get_users, name='get_users'),
+    path('add_user/', management.add_user, name='add_user'),
+    path('users/delete/<int:user_id>', management.delete_user, name='delete_user'),
+    path('password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
 ]

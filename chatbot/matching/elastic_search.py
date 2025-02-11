@@ -17,7 +17,7 @@ def get_elasticsearch_client():
     for _ in range(3):  # Try 3 times
         try:
             client = Elasticsearch(
-                hosts=['http://elasticsearch:9200'],
+                hosts=['http://localhost:9200'],
                 verify_certs=False,
                 ssl_show_warn=False,
                 retry_on_timeout=True,
@@ -35,7 +35,7 @@ def get_elasticsearch_client():
 es_client = get_elasticsearch_client()
 if es_client:
     connections.create_connection(
-        hosts=['http://elasticsearch:9200'],
+        hosts=['http://localhost:9200'],
         verify_certs=False,
         ssl_show_warn=False
     )

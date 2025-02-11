@@ -10,10 +10,17 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)  # Ensure the password is not exposed in responses.
     email = serializers.EmailField(required=True)  # Ensure email is required.
     role = serializers.ChoiceField(choices=RagUser.USER_ROLE_CHOICES, required=False, default='user')
+    last_login = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = RagUser  # Connect the serializer to the User model.
-        fields = ['username', 'email' ,'password','role']  # Specify the fields exposed by this serializer.
+        fields = ['id','username', 'email' ,'password','role','last_login']  # Specify the fields exposed by this serializer.
+
+    def validate_email(self, value):
+        """Ensure email is unique"""
+        if RagUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
 
     def create(self, validated_data):
         # Override the default create method to handle password hashing.

@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate
 
 ## Serializers to ensure input validation
 from ..serializers import UserSerializer
-
+import datetime
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -51,13 +51,24 @@ def login(request):
     refresh = RefreshToken.for_user(user)
     access = refresh.access_token
 
+    user.last_login = datetime.datetime.now()
+    user.save(update_fields=['last_login'])
     # Return tokens and basic user information
     return Response({
         "user": {
             "username": user.username,
             "email": user.email,
-            "role": user.role
+            "role": user.role,
+            "last_login": user.last_login
         },
         "refresh": str(refresh),
         "access": str(access)
+    }, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def reset_password(request):
+    email = request.data.get('email')  # Get username from request
+
+    return Response({
+        "message": str(f"Email has been sent for {email}")
     }, status=status.HTTP_200_OK)

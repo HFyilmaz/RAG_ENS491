@@ -7,12 +7,14 @@ class IsAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
         # Allow access only to users with the 'admin' role
-        return request.user.role == 'admin'
+        return request.user.role == 'admin' or request.user.role == 'superadmin'
 
-class IsUser(permissions.BasePermission):
+# IsUser is deleted since there is no need as using IsAuthenticated corresponds to the same thing.
+
+class IsSuperAdmin(permissions.BasePermission):
     """
-    Custom permission to only allow users with the 'user' role to access the view.
+    Custom permission to allow only superAdmin to access certain views.
     """
 
     def has_permission(self, request, view):
-        return request.user.role == 'user'
+        return request.user.role == 'superadmin'
