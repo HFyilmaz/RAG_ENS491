@@ -1,6 +1,6 @@
 from langchain_ollama import OllamaLLM
 
-from .vectordb import get_embedding_function
+from .vectordb import get_embedding_function, get_embedding_function_ollama
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_chroma import Chroma
@@ -90,7 +90,7 @@ def get_context(vector_db, query_text, CLOSEST_K_CHUNK: int = 5, SIMILARITY_THRE
     # return context
 
 def query_llm(query_text: str, chat_history):
-    embedding_function = get_embedding_function()
+    embedding_function = get_embedding_function_ollama()
     db = Chroma(
         persist_directory = settings.CHROMA_PATH,
         embedding_function = embedding_function
