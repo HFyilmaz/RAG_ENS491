@@ -104,7 +104,7 @@ class RagFile(models.Model):
 @receiver(reset_password_token_created)
 def password_reset_token_created(reset_password_token, *args, **kwargs):
     #change it to 80 when using docker
-    frontend_link = "http://localhost:5173/"
+    frontend_link = "http://localhost:80/"
     token = f"{reset_password_token.key}"
 
     full_link = str(frontend_link) + str("password-reset/") + str(token)

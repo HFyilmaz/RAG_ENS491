@@ -93,34 +93,59 @@ pip install -r requirements.txt
 3. Files will be automatically indexed in Elasticsearch
 4. Use the search functionality to find content within PDFs
 
-
+<br>
 
 # DOCKER GUIDE
 
-## Navigate to the same directory where docker-compose.yml is.
+## Docker Setup
 
-## Make sure in docker-compose.yml file, the context fields points to the source folder for both projects. Adjust it accordingly if frontend is in the different folder for you.
+### Prerequisites
+1. Navigate to the directory containing `docker-compose.yml`
+2. Ensure the `context` fields in `docker-compose.yml` point to the correct source folders for both projects
 
-## Run the following commands
+### Installation and Running
+1. Build the Docker containers:
+```bash
+docker compose build
+```
 
-- docker compose build
-- docker compose up
+2. Start the containers:
+```bash
+docker compose up
+```
 
-### Things may get cached. So to have a fresh start you can use "docker compose build --no-cache"
+Note: For a fresh start without cache, use:
+```bash
+docker compose build --no-cache
+```
 
-## For Ollama model setup
+### Ollama Model Setup
+1. Pull required models when containers are running:
+```bash
+docker exec -it ollama ollama pull llama3.1
+docker exec -it ollama ollama pull nomic-embed-text
+```
 
-### When containers are running
-- docker exec -it ollama ollama pull llama3.1
-- docker exec -it ollama ollama pull nomic-embed-text
+2. View pulled models:
+```bash
+docker exec -it ollama ollama list
+```
 
-### To see pulled models
-- docker exec -it ollama ollama list
+## Password Reset Configuration
 
+### Setup Requirements
+1. Install new dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-# PASSWORD RESET UPDATE GUIDE
-## There is a new requirement so make sure you also installed through "pip install -r requirements.txt"
+2. Configure environment variables in `.env` file:
+- `EMAIL_ADDR`: Your Gmail address
+- `EMAIL_APP_PASSW`: Your Gmail app password
 
-## In .env file make sure you define the keys for "EMAIL_ADDR" and "EMAIL_ADDR_PASSW". You could search on the Internet about how to obtain an app password for your Gmail account.
-
-## Based on the documentation, the reset link is valid for 24 for hours by default. (could be changed by setting DJANGO_REST_MULTITOKENAUTH_RESET_TOKEN_EXPIRY_TIME variable)
+Note: 
+1. Search online for instructions on obtaining a Gmail app password.
+2. Locate the `.env` file in the same directory with `docker-compose.yml` file.
+### Additional Information
+- Reset link validity: 24 hours by default
+- Can be modified using `DJANGO_REST_MULTITOKENAUTH_RESET_TOKEN_EXPIRY_TIME` variable
