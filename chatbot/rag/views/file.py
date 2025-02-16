@@ -52,8 +52,8 @@ def delete_rag_file(request, rag_file_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdmin])
 def get_rag_files(request):
-    # Query all RagFile objects
-    rag_files = RagFile.objects.all()
+    # Query all RagFile objects ordered by created_at in descending order
+    rag_files = RagFile.objects.all().order_by('-created_at')
 
     # Serialize the data
     serializer = RagFileSerializer(rag_files, many=True)
