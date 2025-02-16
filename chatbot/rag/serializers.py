@@ -54,7 +54,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Conversation
-        fields = ['conversation_id', 'created_at', 'last_modified', 'queries','username']
+        fields = ['conversation_id', 'name', 'created_at', 'last_modified', 'queries', 'username']
   
 
 class RagFileSerializer(serializers.ModelSerializer):

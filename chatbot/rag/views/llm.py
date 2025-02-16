@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from ..models import Query
 from ..models import Conversation
@@ -94,8 +95,8 @@ def get_queries(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_conversations(request):
-    # Directly fetch conversations related to the authenticated user
-    conversations = request.user.conversations.all()
+    # Directly fetch conversations related to the authenticated user, ordered by last_modified
+    conversations = request.user.conversations.all().order_by('-last_modified')
 
     # Serialize the conversations
     serializer = ConversationSerializer(conversations, many=True)
@@ -110,6 +111,26 @@ def get_conversation(request, conversation_id):
 
     serializer = ConversationSerializer(conversation)
 
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_conversation_name(request, conversation_id):
+    # Retrieve the conversation by ID, ensuring it's owned by the authenticated user
+    conversation = get_object_or_404(Conversation, id=conversation_id, user=request.user)
+    
+    # Get the new name from request data
+    new_name = request.data.get('name')
+    if not new_name:
+        return Response({"error": "Name is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Update the name and last_modified
+    conversation.name = new_name
+    conversation.last_modified = timezone.now()
+    conversation.save()
+    
+    # Return the updated conversation
+    serializer = ConversationSerializer(conversation)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['DELETE'])

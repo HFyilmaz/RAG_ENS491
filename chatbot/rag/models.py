@@ -37,11 +37,18 @@ class Query(models.Model):
     sources = models.TextField()
     
 class Conversation(models.Model):
+    name = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(null=True, blank=True)  # Set when the first query is added
     last_modified = models.DateTimeField(null=True, blank=True)  # Set when a query is added or modified
     queries = models.ManyToManyField('Query', related_name='conversations', blank=True)
     user = models.ForeignKey(RagUser, related_name='conversations', on_delete=models.SET_NULL, null=True)
 
+    def save(self, *args, **kwargs):
+        if not self.name and self.user:
+            # Count existing conversations for this user
+            count = Conversation.objects.filter(user=self.user).count()
+            self.name = f"Chat #{count + 1}"
+        super().save(*args, **kwargs)
 
     def update_timestamps(self):
         queries = self.queries.order_by('created_at')

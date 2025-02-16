@@ -149,3 +149,21 @@ Note:
 ### Additional Information
 - Reset link validity: 24 hours by default
 - Can be modified using `DJANGO_REST_MULTITOKENAUTH_RESET_TOKEN_EXPIRY_TIME` variable
+
+## Database Migrations
+
+### Creating and Applying Migrations
+When you make changes to Django models, you need to create and apply migrations. Here's how to do it with Docker:
+
+1. Create new migrations:
+
+```bash
+docker exec -it django_app python manage.py makemigrations
+```
+
+2. To apply all pending migrations for all apps:
+```bash
+docker exec -it django_app python manage.py migrate
+```
+
+Note: Always make sure your Docker containers are running before executing migration commands.
