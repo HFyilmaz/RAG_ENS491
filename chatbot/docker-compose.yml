@@ -16,12 +16,14 @@ services:
       - .:/app  # Mount project directory
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1-arm64  # Changed to ARM64 version
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-XX:UseSVE=0"
+      - "CLI_JAVA_OPTS=-XX:UseSVE=0"
     ulimits:
       memlock:
         soft: -1
@@ -31,7 +33,7 @@ services:
     ports:
       - "9200:9200"
     healthcheck:
-      test: curl -s http://localhost:9200/_cluster/health || exit 1
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]  # Modified healthcheck
       interval: 10s
       timeout: 5s
       retries: 5

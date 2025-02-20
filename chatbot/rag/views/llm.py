@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from ..models import Query
 from ..models import Conversation
-from ..llm_model import query_llm
+from ..llm_model import query_llm, generate_conversation_name
 from ..serializers import QuerySerializer
 from ..serializers import ConversationSerializer
 from ..permissions import IsAdmin
@@ -30,6 +30,7 @@ def query(request):
 
     # If the id is not provided that means we are creating new conversation
     conversation = None
+    is_new_conversation = False
     if conversation_id:
         # Make sure provided id exists among conversations
         try:
@@ -43,6 +44,7 @@ def query(request):
             last_modified=None,
             user=request.user
         )
+        is_new_conversation = True
     # Access the queries JSON field
     queries = conversation.queries.all() 
     
@@ -68,13 +70,18 @@ def query(request):
     # Adding the query to the conversation
     conversation.queries.add(query_instance)
     
-    # Updating the fields, "last_modified", and "created_at" depending on the newly added query(for last_modified especially)
+    # If this is a new conversation, generate a meaningful name
+    if is_new_conversation:
+        conversation_name = generate_conversation_name(query_text, response["response_text"])
+        conversation.name = conversation_name
+    
+    # Updating the fields, "last_modified", and "created_at" depending on the newly added query
     conversation.update_timestamps()
 
     response["conversation_id"] = conversation.id
     response["query_id"] = query_instance.id
-
-
+    if is_new_conversation:
+        response["conversation_name"] = conversation_name
 
     return Response(response, status=status.HTTP_200_OK)
 
