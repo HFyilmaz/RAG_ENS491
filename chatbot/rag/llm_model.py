@@ -89,6 +89,23 @@ def get_context(vector_db, query_text, CLOSEST_K_CHUNK: int = 5, SIMILARITY_THRE
     # print(context)
     # return context
 
+def generate_conversation_name(query: str, response: str) -> str:
+    prompt_template = ChatPromptTemplate.from_messages([
+        ("system", "Generate a short, meaningful title (maximum 6 words) for a conversation based on the following query and response. The title should capture the main topic or intent of the conversation. Only return the title, nothing else."),
+        ("human", f"Query: {query}\nResponse: {response}")
+    ])
+    
+    try:
+        name = llm_ollama.invoke(prompt_template.format())
+        # Clean up the name - remove quotes if present and limit length
+        name = name.strip('"\'').strip()
+        if len(name) > 50:  # Set a reasonable maximum length
+            name = name[:47] + "..."
+        return name
+    except Exception as e:
+        print("Error generating conversation name:", e)
+        return "New Chat"  # Fallback name
+
 def query_llm(query_text: str, chat_history):
     embedding_function = get_embedding_function_ollama()
     db = Chroma(
