@@ -167,3 +167,23 @@ docker exec -it django_app python manage.py migrate
 ```
 
 Note: Always make sure your Docker containers are running before executing migration commands.
+
+## To run ollama in a container change the following sections:
+### in docker-compose.yml remove
+```
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  
+```
+
+### in llm_model.py and vectordb.py change the following section:
+
+```
+embeddings = OllamaEmbeddings(model="nomic-embed-text",base_url="http://host.docker.internal:11434")
+```
+
+to
+```
+embeddings = OllamaEmbeddings(model="nomic-embed-text",base_url="http://ollama:11434")
+```
+
+
