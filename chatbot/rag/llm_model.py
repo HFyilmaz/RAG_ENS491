@@ -13,11 +13,15 @@ from langchain_core.prompts import MessagesPlaceholder
 from django.conf import settings
 from dotenv import load_dotenv
 import os
+import time
+import logging
 
 # Load environment variables
 load_dotenv()
 
-
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 hf_key = os.getenv("HuggingFace_KEY")
 #repo_id = "mistralai/Mixtral-8x7B-Instruct-v0.1"
@@ -43,7 +47,7 @@ model = HuggingFaceEndpoint(
 # To run on local machine with Ollama (ollama needs to be installed)
 from langchain_ollama import OllamaLLM
 '''
-llm_ollama = OllamaLLM(model="llama3.2:1b", base_url="http://ollama:11434")
+llm_ollama = OllamaLLM(model="llama3.2:1b", base_url="http://host.docker.internal:11434")
 def get_context(vector_db, query_text, CLOSEST_K_CHUNK: int = 5, SIMILARITY_THRESHOLD: float = 0.5):
     # Search the DB.
     results = vector_db.similarity_search_with_score(query_text, k=CLOSEST_K_CHUNK)
@@ -107,13 +111,25 @@ def generate_conversation_name(query: str, response: str) -> str:
         return "New Chat"  # Fallback name
 
 def query_llm(query_text: str, chat_history):
+    start_time = time.time()
+    
+    # Initialize embedding function and DB
+    logger.info("Initializing embedding function and ChromaDB...")
+    embedding_start = time.time()
     embedding_function = get_embedding_function_ollama()
     db = Chroma(
         persist_directory = settings.CHROMA_PATH,
         embedding_function = embedding_function
     )
+    logger.info(f"Embedding initialization took: {time.time() - embedding_start:.2f} seconds")
     
+    # Get context
+    context_start = time.time()
     context_obj = get_context(db, query_text)
+    logger.info(f"Context retrieval took: {time.time() - context_start:.2f} seconds")
+    
+    # Create prompt
+    prompt_start = time.time()
     prompt_template = ChatPromptTemplate.from_messages([
         ("system","The following is the context fetched from the database. Mention your sources if possible in your answer.: \n{context}\n"),
         ("system","The following is a friendly conversation between a human and an AI. If the AI does not know the answer to a question, it truthfully says it does not know."),
@@ -122,14 +138,19 @@ def query_llm(query_text: str, chat_history):
         ("human", "{input}"),
         ("ai","")
     ])
-    prompt= prompt_template.format(context=context_obj["context"], input=query_text, chat_history=chat_history)
-    # Directing the prompt to the model
-    print(prompt)
-
-
+    prompt = prompt_template.format(context=context_obj["context"], input=query_text, chat_history=chat_history)
+    logger.info(f"Prompt creation took: {time.time() - prompt_start:.2f} seconds")
     
+    # LLM inference
+    llm_start = time.time()
     try:
         response = llm_ollama.invoke(prompt)
+        logger.info(f"LLM inference took: {time.time() - llm_start:.2f} seconds")
     except Exception as e:
+        logger.error(f"Error invoking LLM: {str(e)}")
         print("Error invoking chain:", e)
+        
+    total_time = time.time() - start_time
+    logger.info(f"Total query_llm execution time: {total_time:.2f} seconds")
+    
     return {"response_text":response, "sources":context_obj["sources"]}

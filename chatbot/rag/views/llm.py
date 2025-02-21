@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+import time
+import logging
 
 from ..models import Query
 from ..models import Conversation
@@ -14,78 +16,86 @@ from ..permissions import IsAdmin
 
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
-
-
-
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def query(request):
-    query_text = request.data.get('query')  # Get query text from request
+    start_time = time.time()
+    
+    query_text = request.data.get('query')
     conversation_id = request.data.get('conversation_id')
-    print(conversation_id)
+    logger.info(f"Processing query request - conversation_id: {conversation_id}")
+    
     # Validate input
     if not query_text.strip():
         return Response({"error": "Your query is empty!"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # If the id is not provided that means we are creating new conversation
+    # Conversation handling
+    conversation_start = time.time()
     conversation = None
     is_new_conversation = False
     if conversation_id:
-        # Make sure provided id exists among conversations
         try:
             conversation = Conversation.objects.get(id=conversation_id)
         except Conversation.DoesNotExist:
             return Response({"error": "Invalid conversation ID!"}, status=status.HTTP_404_NOT_FOUND)
     else:
-        # If no conversation ID is provided, create a new conversation
         conversation = Conversation.objects.create(
-            created_at=None,  # Will be set later when the first query is added
+            created_at=None,
             last_modified=None,
             user=request.user
         )
         is_new_conversation = True
-    # Access the queries JSON field
-    queries = conversation.queries.all() 
-    
-    # Initialize chat history
-    chat_history = []
+    logger.info(f"Conversation handling took: {time.time() - conversation_start:.2f} seconds")
 
-    # Loop through the queries and populate chat history
+    # Chat history processing
+    history_start = time.time()
+    queries = conversation.queries.all()
+    chat_history = []
     if len(queries) == 0:
         chat_history.append(SystemMessage(content="No conversation history is available."))
     for query in queries:
-        human_input = query.query_text
-        ai_response = query.response_text
+        chat_history.append(HumanMessage(content=query.query_text))
+        chat_history.append(AIMessage(content=query.response_text))
+    logger.info(f"Chat history processing took: {time.time() - history_start:.2f} seconds")
+    logger.info(f"Number of messages in history: {len(chat_history)}")
 
-        # Append HumanMessage and AIMessage to chat_history
-        chat_history.append(HumanMessage(content=human_input))
-        chat_history.append(AIMessage(content=ai_response))
-
+    # LLM Query
+    llm_start = time.time()
     response = query_llm(query_text, chat_history)
-    # Save the query to the database, associating it with the authenticated user
-    comma_seperated_sources = ",".join(response["sources"])
-    query_instance = Query.objects.create(user=request.user, query_text=query_text, response_text=response["response_text"], sources=comma_seperated_sources)
+    logger.info(f"LLM query took: {time.time() - llm_start:.2f} seconds")
 
-    # Adding the query to the conversation
-    conversation.queries.add(query_instance)
+    # Database operations
+    db_start = time.time()
+    comma_seperated_sources = ",".join(response["sources"])
+    query_instance = Query.objects.create(
+        user=request.user,
+        query_text=query_text,
+        response_text=response["response_text"],
+        sources=comma_seperated_sources
+    )
     
-    # If this is a new conversation, generate a meaningful name
     if is_new_conversation:
         conversation_name = generate_conversation_name(query_text, response["response_text"])
         conversation.name = conversation_name
     
-    # Updating the fields, "last_modified", and "created_at" depending on the newly added query
+    conversation.queries.add(query_instance)
     conversation.update_timestamps()
+    logger.info(f"Database operations took: {time.time() - db_start:.2f} seconds")
 
+    # Prepare response
     response["conversation_id"] = conversation.id
     response["query_id"] = query_instance.id
     if is_new_conversation:
         response["conversation_name"] = conversation_name
 
+    total_time = time.time() - start_time
+    logger.info(f"Total query endpoint execution time: {total_time:.2f} seconds")
+
     return Response(response, status=status.HTTP_200_OK)
-
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -97,7 +107,6 @@ def get_queries(request):
     serializer = QuerySerializer(queries, many=True)
    
     return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
