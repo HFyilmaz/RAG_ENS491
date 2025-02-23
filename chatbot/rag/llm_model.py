@@ -48,9 +48,16 @@ model = HuggingFaceEndpoint(
 from langchain_ollama import OllamaLLM
 '''
 llm_ollama = OllamaLLM(model="llama3.1", base_url="http://host.docker.internal:11434")
+# llm_ollama = OllamaLLM(model="deepseek-r1:8b", base_url="http://host.docker.internal:11434")
 def get_context(vector_db, query_text, CLOSEST_K_CHUNK: int = 5, SIMILARITY_THRESHOLD: float = 0.5):
+    logger.info(f"Searching for context with query: '{query_text}' (k={CLOSEST_K_CHUNK}, threshold={SIMILARITY_THRESHOLD})")
+    
     # Search the DB.
     results = vector_db.similarity_search_with_score(query_text, k=CLOSEST_K_CHUNK)
+    
+    logger.info("Search results before filtering:")
+    for doc, score in results:
+        logger.info(f"Document ID: {doc.metadata.get('id', 'N/A')} - Similarity Score: {score:.4f}")
 
     filtered_results = [
         (doc, score) for doc, score in results if score-1 <= SIMILARITY_THRESHOLD
@@ -61,37 +68,10 @@ def get_context(vector_db, query_text, CLOSEST_K_CHUNK: int = 5, SIMILARITY_THRE
     if filtered_results:
         context_text = "\n\n---\n\n".join([ doc.page_content for doc,_score in filtered_results])
     else:
+        logger.warning("No matching documents found within similarity threshold")
         context_text = "There is nothing found in the database as a context."
-    # retriever = vector_db.as_retriever(search_kwargs={"k": CLOSEST_K_CHUNK})
     return {"context":context_text, "sources":sources}
 
-    # system_instruction = """Given a chat history and the latest user question \
-    #     which might reference context in the chat history, formulate a standalone question \
-    #     which can be understood without the chat history. Do NOT answer the question, \
-    #     just reformulate it if needed and otherwise return it as is."""
-    # # We are navigating retriever to do the relevant searches based on the conversation history
-    # retriever_prompt = ChatPromptTemplate.from_messages([
-    #     ("system", system_instruction),
-    #     MessagesPlaceholder(variable_name="chat_history"),
-    #     ("human", "{input}")]
-    # )
-
-    # history_aware_retriever = create_history_aware_retriever(
-    #     llm=model,
-    #     retriever=retriever,
-    #     prompt=retriever_prompt
-    # )
-
-    # retrieval_results = history_aware_retriever.invoke({
-    #     "input": query_text,
-    #     "chat_history": chat_history
-    # })
-    # context_list = []
-    # for i, doc in enumerate(retrieval_results):
-    #     print(doc)
-    # context = "\n\n".join(context_list)
-    # print(context)
-    # return context
 
 def generate_conversation_name(query: str, response: str) -> str:
     prompt_template = ChatPromptTemplate.from_messages([
