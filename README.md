@@ -1,38 +1,24 @@
-# RAG_ENS491
+# Retrieval Augmented Generation (RAG) - UN Regulations 
 
-### Run the following command to install dependencies:
-#### pip install -r requirements.txt
+> **Note:** If you're using Docker, skip the manual installation steps and go directly to the [DOCKER Guide](#docker-guide) section. The following manual setup is only needed for local development without Docker.
 
-# This branch uses embeddings and LLM model locally
+## Sections
+- [Local Development](#local-development)
+- [DOCKER Guide](#docker-guide)
+- [Password Reset Configuration](#password-reset-configuration)
+- [Database Migrations](#database-migrations)
+- [Ollama Model Setup](#ollama-model-setup)
 
-# Current API's
-### /chatbot/register
-#### Expects JSON Data with "username", "email", and "password"
-#### Returns user-related data
+## Local Development
 
-### /chatbot/login
-#### Expects JSON Data with "username" and "password"
-#### Returns user-related data, refresh token and access token
-
-### /chatbot/query
-#### Requires Authentication
-#### Expects JSON Data with "query"
-#### Returns the model response
-
-### /chatbot/get_queries
-#### Requires Authentication
-#### Returns the list of all queries performed by the authenticated requesting user
-
-### /chatbot/upload_file
-#### Requires Authentication
-#### Expects form-data with "file" field
-
-### /chatbot/search
-#### Expects JSON Data with "search"
-#### Returns the list of all files that contain the search query
+Run the following command to install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
 ## Elasticsearch Setup
 
+* <b>If docker is not an option, follow the following steps to install Elasticsearch locally:</b>
 ### Installation
 1. Download Elasticsearch 8.11.1:
 ```
@@ -95,9 +81,7 @@ pip install -r requirements.txt
 
 <br>
 
-# DOCKER GUIDE
-
-## Docker Setup
+## DOCKER Guide
 
 ### Prerequisites
 1. Navigate to the directory containing `docker-compose.yml`
@@ -166,23 +150,22 @@ docker exec -it django_app python manage.py makemigrations
 docker exec -it django_app python manage.py migrate
 ```
 
-Note: Always make sure your Docker containers are running before executing migration commands.
+>**Note:** Always make sure your Docker containers are running before executing migration commands.
 
-## To run ollama in a container change the following sections:
-### in docker-compose.yml remove
+### To run ollama in a container change the following sections:
+<b>In docker-compose.yml remove</b>
 ```
     extra_hosts:
       - "host.docker.internal:host-gateway"  
 ```
 
-### in llm_model.py and vectordb.py change the following section:
+<b>In llm_model.py and vectordb.py change the following section:</b>
 
 ```
+# Previous Version for local development
 embeddings = OllamaEmbeddings(model="nomic-embed-text",base_url="http://host.docker.internal:11434")
-```
 
-to
-```
+# New Version for container
 embeddings = OllamaEmbeddings(model="nomic-embed-text",base_url="http://ollama:11434")
 ```
 
