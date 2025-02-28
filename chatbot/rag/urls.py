@@ -1,6 +1,6 @@
 from django.urls import path, include
 
-from .views import auth, file, llm, matching, management
+from .views import auth, file, llm, matching, management, evaluation
 
 app_name = "rag"
 
@@ -24,4 +24,11 @@ urlpatterns = [
     path('add_user/', management.add_user, name='add_user'),
     path('users/delete/<int:user_id>', management.delete_user, name='delete_user'),
     path('password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
+    
+    # Evaluation endpoints
+    path('evaluation/data/', evaluation.get_evaluation_data, name='get_evaluation_data'),
+    path('evaluation/generate/', evaluation.generate_evaluation_qa_pairs, name='generate_evaluation_qa_pairs'),
+    path('evaluation/filter/', evaluation.filter_evaluation_qa_pairs, name='filter_evaluation_qa_pairs'),
+    path('evaluation/evaluate/pair/', evaluation.evaluate_qa_pair, name='evaluate_qa_pair'),
+    path('evaluation/evaluate/all/', evaluation.evaluate_all_filtered_qa_pairs, name='evaluate_all_filtered_qa_pairs'),
 ]

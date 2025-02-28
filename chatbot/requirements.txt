@@ -23,3 +23,6 @@ elasticsearch==8.11.1
 elasticsearch-dsl==8.15.4
 django-elasticsearch-dsl==8.0
 django-rest-passwordreset
+matplotlib
+numpy
+pandas

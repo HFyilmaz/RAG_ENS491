@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "question": "What is the mass of the free fall impactor, rounded to two significant figures?",
+    "answer": "According to section 5.9.3, the mass of the free fall impactor is given as 7.78 \u00b1 0.01 kg. Rounded to two significant figures, this remains 7.8 kg.",
+    "source": "/app/media/rag_database/Regulation - 95.pdf",
+    "page": 59,
+    "chunk_id": "",
+    "chunk_content": "5.9. Thorax \n5.9.1. Each rib module is certified separately. \n5.9.2. The rib module is positioned vertically in a drop test rig and the rib cylinder is \nclamped rigidly onto the rig. \n5.9.3. The impactor is a free fall mass of 7.78 \u00b1 0.01 kg with a flat face and a diameter \nof 150 \u00b1 2 mm. \n5.9.4. The centre line of the impactor should be aligned with the centre line of the \nrib\u2019s guide system. \n5.9.5. The impact severity is specified by the drop heights of 815, 204 and 459 mm."
+  }
+]
