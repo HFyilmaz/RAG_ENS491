@@ -192,20 +192,20 @@ Evaluates one or more QA pairs by ID from the filtered QA pairs.
 **Parameters:**
 - `id` (string or list): ID or list of IDs of QA pairs to evaluate
 - `filtered_file` (string, optional): Name of the file containing filtered QA pairs under the evaluation directory. If not provided, the default file is used. The .json extension is automatically added if not included.
-- `filename` (string, optional): Custom filename for saving evaluation results. The .json extension is automatically added if not included.
+- `output_file` (string, optional): Custom filename for saving evaluation results. The .json extension is automatically added if not included.
 
 ### POST `/chatbot/evaluation/evaluate/all/`
 Evaluates all filtered QA pairs.
 **Parameters:**
 - `filtered_file` (string, optional): Name of the file containing filtered QA pairs under the evaluation directory. If not provided, the default file is used. The .json extension is automatically added if not included.
-- `filename` (string, optional): Custom filename for saving evaluation results. The .json extension is automatically added if not included.
+- `output_file` (string, optional): Custom filename for saving evaluation results. The .json extension is automatically added if not included.
 
 ### GET `/chatbot/evaluation/data/`
 Retrieves all evaluation data including QA pairs, filtered pairs, and evaluation results.
 **Parameters:**
 - `qa_file` (string, optional): Name of the file containing QA pairs under the evaluation directory. If not provided, the default file is used. The .json extension is automatically added if not included.
 - `filtered_file` (string, optional): Name of the file containing filtered QA pairs under the evaluation directory. If not provided, the default file is used. The .json extension is automatically added if not included.
-- `results_file` (string, optional): Name of the file containing evaluation results under the evaluation directory. If not provided, the default file is used. The .json extension is automatically added if not included.
+- `output_file` (string, optional): Name of the file containing evaluation results under the evaluation directory. If not provided, the default file is used. The .json extension is automatically added if not included.
 
 
 
