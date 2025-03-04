@@ -187,3 +187,17 @@ embeddings = OllamaEmbeddings(model="nomic-embed-text",base_url="http://ollama:1
 ```
 
 
+
+## Sign Up for LangSmith and Configure API Keys
+
+1. Go to the **LangSmith** official website and sign up.
+2. Once you create your account, retrieve your `API_KEY` from **Settings**.
+3. In your `.env` file, set the following keys:
+
+   ```env
+   LANGSMITH_API_KEY="your_api_key"
+   LANGCHAIN_TRACING_V2="true"
+   LANGCHAIN_PROJECT="rag-project"  # You can change this to anything. If it does not exist, it will be created automatically.
+4. From now on, LangSmith will allow you to observe chain executions through the website, particularly in the "Tracing Projects" section.
+
+Note: If you do not provide these keys, you simply won’t be able to view the traces in your LangSmith account. It does not cause any errors or inconsistencies.

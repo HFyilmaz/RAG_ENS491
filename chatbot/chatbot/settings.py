@@ -106,6 +106,7 @@ ROOT_URLCONF = 'chatbot.urls'
 WSGI_APPLICATION = 'chatbot.wsgi.application'
 
 
+
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
