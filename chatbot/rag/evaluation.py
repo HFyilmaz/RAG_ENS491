@@ -351,8 +351,10 @@ def evaluate_rag_system(qa_pairs: List[Dict[str, Any]], filename=None) -> Dict[s
     Returns:
         Dictionary with evaluation results
     """
-    logger.info(f"Evaluating RAG system with {len(qa_pairs)} QA pairs...")
+    # Filter QA pairs to only include those that passed the filter
+    filtered_qa_pairs = [pair for pair in qa_pairs if pair.get('passed_filter', False)]
     
+    logger.info(f"Evaluating RAG system with {len(filtered_qa_pairs)} QA pairs that passed filtering (out of {len(qa_pairs)} total pairs)...")
     
     # Define the evaluation prompt template
     evaluation_prompt = """###Task Description:
@@ -390,6 +392,7 @@ def evaluate_rag_system(qa_pairs: List[Dict[str, Any]], filename=None) -> Dict[s
         "qa_pairs": [],
         "summary": {
             "total_pairs": len(qa_pairs),
+            "filtered_pairs": len(filtered_qa_pairs),
             "average_score": 0,
             "scores_distribution": {}
         }
@@ -398,12 +401,12 @@ def evaluate_rag_system(qa_pairs: List[Dict[str, Any]], filename=None) -> Dict[s
     total_score = 0
     scores_distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
     
-    for i, qa_pair in enumerate(qa_pairs):
+    for i, qa_pair in enumerate(filtered_qa_pairs):
         question = qa_pair["question"]
         reference_answer = qa_pair["answer"]
         qa_id = qa_pair.get("id", i+1)
         
-        logger.info(f"Evaluating question {i+1}/{len(qa_pairs)} (ID: {qa_id}): {question[:50]}...")
+        logger.info(f"Evaluating question {i+1}/{len(filtered_qa_pairs)} (ID: {qa_id}): {question[:50]}...")
         
         try:
             # Query the RAG system with the question
@@ -474,8 +477,8 @@ def evaluate_rag_system(qa_pairs: List[Dict[str, Any]], filename=None) -> Dict[s
             results["qa_pairs"].append(pair_result)
     
     # Calculate average score
-    if len(qa_pairs) > 0:
-        results["summary"]["average_score"] = total_score / len(qa_pairs)
+    if len(filtered_qa_pairs) > 0:
+        results["summary"]["average_score"] = total_score / len(filtered_qa_pairs)
     
     # Add scores distribution to summary
     results["summary"]["scores_distribution"] = scores_distribution
