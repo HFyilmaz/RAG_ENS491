@@ -16,7 +16,8 @@ from ..evaluation import (
     evaluate_rag_system,
     QA_PAIRS_PATH,
     FILTERED_QA_PAIRS_PATH,
-    EVALUATION_RESULTS_PATH
+    EVALUATION_RESULTS_PATH,
+    EVAL_DIR
 )
 from ..llm_model import query_llm
 
@@ -24,25 +25,52 @@ from ..llm_model import query_llm
 @permission_classes([IsAuthenticated])
 def get_evaluation_data(request):
     """Get all evaluation data: QA pairs, filtered pairs, and evaluation results."""
+    # Extract parameters from request
+    qa_file = request.GET.get('qa_file', None)
+    filtered_file = request.GET.get('filtered_file', None)
+    results_file = request.GET.get('output_file', None)
+    
     data = {
         "qa_pairs": [],
         "filtered_qa_pairs": [],
         "results": None
     }
     
+    # Determine file paths
+    qa_pairs_path = QA_PAIRS_PATH
+    if qa_file:
+        # Ensure the file has a .json extension
+        if not qa_file.lower().endswith('.json'):
+            qa_file = f"{qa_file}.json"
+        qa_pairs_path = os.path.join(EVAL_DIR, qa_file)
+    
+    filtered_qa_pairs_path = FILTERED_QA_PAIRS_PATH
+    if filtered_file:
+        # Ensure the file has a .json extension
+        if not filtered_file.lower().endswith('.json'):
+            filtered_file = f"{filtered_file}.json"
+        filtered_qa_pairs_path = os.path.join(EVAL_DIR, filtered_file)
+    
+    evaluation_results_path = EVALUATION_RESULTS_PATH
+    if results_file:
+        # Ensure the file has a .json extension
+        if not results_file.lower().endswith('.json'):
+            results_file = f"{results_file}.json"
+        evaluation_results_path = os.path.join(EVAL_DIR, results_file)
+    
     # Load QA pairs if they exist
-    if os.path.exists(QA_PAIRS_PATH):
-        with open(QA_PAIRS_PATH, 'r') as f:
+    if os.path.exists(qa_pairs_path):
+        with open(qa_pairs_path, 'r') as f:
             data["qa_pairs"] = json.load(f)
     
     # Load filtered QA pairs if they exist
-    if os.path.exists(FILTERED_QA_PAIRS_PATH):
-        with open(FILTERED_QA_PAIRS_PATH, 'r') as f:
+    if os.path.exists(filtered_qa_pairs_path):
+        with open(filtered_qa_pairs_path, 'r') as f:
             data["filtered_qa_pairs"] = json.load(f)
     
     # Load evaluation results if they exist
-    if os.path.exists(EVALUATION_RESULTS_PATH):
-        with open(EVALUATION_RESULTS_PATH, 'r') as f:
+    if os.path.exists(evaluation_results_path):
+        with open(evaluation_results_path, 'r') as f:
             data["results"] = json.load(f)
     
     return JsonResponse(data)
@@ -54,6 +82,7 @@ def generate_evaluation_qa_pairs(request):
     # Extract parameters from request
     total_pairs = int(request.data.get('total_pairs', 10))
     document_ids = request.data.get('document_ids', None)
+    output_file = request.data.get('output_file', None)
     
     # Convert document IDs to document sources if provided
     document_sources = None
@@ -78,11 +107,20 @@ def generate_evaluation_qa_pairs(request):
             return JsonResponse({"status": "error", "message": f"Error retrieving documents: {str(e)}"}, status=400)
     
     # Generate QA pairs
-    qa_pairs = generate_qa_pairs(total_pairs=total_pairs, document_sources=document_sources)
+    qa_pairs = generate_qa_pairs(total_pairs=total_pairs, document_sources=document_sources, output_file=output_file)
+    
+    # Determine the file path that was used
+    if output_file:
+        # Ensure the file has a .json extension
+        if not output_file.lower().endswith('.json'):
+            output_file = f"{output_file}.json"
+        file_path = os.path.join(EVAL_DIR, output_file)
+    else:
+        file_path = QA_PAIRS_PATH
     
     return JsonResponse({
         "status": "success", 
-        "message": f"Generated {len(qa_pairs)} QA pairs" + (f" from {len(document_sources)} documents" if document_sources else " randomly from all documents"), 
+        "message": f"Generated {len(qa_pairs)} QA pairs" + (f" from {len(document_sources)} documents" if document_sources else " randomly from all documents") + f" and saved to {file_path}", 
         "qa_pairs": qa_pairs
     })
 
@@ -90,20 +128,41 @@ def generate_evaluation_qa_pairs(request):
 @permission_classes([IsAuthenticated])
 def filter_evaluation_qa_pairs(request):
     """Filter QA pairs based on quality criteria."""
+    # Extract parameters from request
+    qa_file = request.data.get('qa_file', None)
+    output_file = request.data.get('output_file', None)
+    
+    # Determine the QA pairs file path
+    qa_pairs_path = QA_PAIRS_PATH
+    if qa_file:
+        # Ensure the file has a .json extension
+        if not qa_file.lower().endswith('.json'):
+            qa_file = f"{qa_file}.json"
+        qa_pairs_path = os.path.join(EVAL_DIR, qa_file)
+    
     # Check if QA pairs exist
-    if not os.path.exists(QA_PAIRS_PATH):
-        return JsonResponse({"status": "error", "message": "No QA pairs found. Generate QA pairs first."}, status=400)
+    if not os.path.exists(qa_pairs_path):
+        return JsonResponse({"status": "error", "message": f"No QA pairs found at {qa_pairs_path}. Generate QA pairs first."}, status=400)
     
     # Load QA pairs
-    with open(QA_PAIRS_PATH, 'r') as f:
+    with open(qa_pairs_path, 'r') as f:
         qa_pairs = json.load(f)
     
     # Filter QA pairs
-    filtered_pairs = filter_qa_pairs(qa_pairs)
+    filtered_pairs = filter_qa_pairs(qa_pairs, output_file=output_file)
+    
+    # Determine the file path that was used
+    if output_file:
+        # Ensure the file has a .json extension
+        if not output_file.lower().endswith('.json'):
+            output_file = f"{output_file}.json"
+        output_path = os.path.join(EVAL_DIR, output_file)
+    else:
+        output_path = FILTERED_QA_PAIRS_PATH
     
     return JsonResponse({
         "status": "success", 
-        "message": f"Successfully filtered QA pairs", 
+        "message": f"Successfully filtered QA pairs and saved to {output_path}", 
         "filtered_pairs_count": len(filtered_pairs),
         "filtered_qa_pairs": filtered_pairs,
     })
@@ -112,8 +171,10 @@ def filter_evaluation_qa_pairs(request):
 @permission_classes([IsAuthenticated])
 def evaluate_qa_pair(request):
     """Evaluate one or more QA pairs by ID from filtered QA pairs."""
-    # Extract QA pair ID(s) from request
+    # Extract parameters from request
     qa_ids = request.data.get('id')
+    filtered_file = request.data.get('filtered_file', None)
+    filename = request.data.get('output_file', None)
     
     # Handle both single ID and list of IDs
     if not qa_ids:
@@ -123,12 +184,20 @@ def evaluate_qa_pair(request):
     if not isinstance(qa_ids, list):
         qa_ids = [qa_ids]
     
+    # Determine the filtered QA pairs file path
+    filtered_qa_pairs_path = FILTERED_QA_PAIRS_PATH
+    if filtered_file:
+        # Ensure the file has a .json extension
+        if not filtered_file.lower().endswith('.json'):
+            filtered_file = f"{filtered_file}.json"
+        filtered_qa_pairs_path = os.path.join(EVAL_DIR, filtered_file)
+    
     # Check if filtered QA pairs exist
-    if not os.path.exists(FILTERED_QA_PAIRS_PATH):
-        return JsonResponse({"status": "error", "message": "No filtered QA pairs found. Filter QA pairs first."}, status=400)
+    if not os.path.exists(filtered_qa_pairs_path):
+        return JsonResponse({"status": "error", "message": f"No filtered QA pairs found at {filtered_qa_pairs_path}. Filter QA pairs first."}, status=400)
     
     # Load filtered QA pairs
-    with open(FILTERED_QA_PAIRS_PATH, 'r') as f:
+    with open(filtered_qa_pairs_path, 'r') as f:
         filtered_pairs = json.load(f)
     
     # Find the QA pairs with the given IDs
@@ -149,12 +218,12 @@ def evaluate_qa_pair(request):
     if not selected_pairs:
         return JsonResponse({"status": "error", "message": f"None of the requested QA pair IDs were found in filtered QA pairs", "not_found_ids": not_found_ids}, status=404)
     
-    # Generate a filename with the QA pair IDs
-    id_string = "_".join(str(qa_id) for qa_id in qa_ids[:3])
-    if len(qa_ids) > 3:
-        id_string += f"_and_{len(qa_ids) - 3}_more"
-    
-    filename = f"qa_evaluation_{id_string}_{int(time.time())}.json"
+    # Generate a filename with the QA pair IDs if not provided
+    if not filename:
+        id_string = "_".join(str(qa_id) for qa_id in qa_ids[:3])
+        if len(qa_ids) > 3:
+            id_string += f"_and_{len(qa_ids) - 3}_more"
+        filename = f"qa_evaluation_{id_string}_{int(time.time())}"
     
     # Evaluate the QA pairs
     results = evaluate_rag_system(selected_pairs, filename)
@@ -176,15 +245,24 @@ def evaluate_qa_pair(request):
 @permission_classes([IsAuthenticated])
 def evaluate_all_filtered_qa_pairs(request):
     """Evaluate all filtered QA pairs."""
-    # Check if filtered QA pairs exist
-    if not os.path.exists(FILTERED_QA_PAIRS_PATH):
-        return JsonResponse({"status": "error", "message": "No filtered QA pairs found. Filter QA pairs first."}, status=400)
+    # Extract parameters from request
+    filtered_file = request.data.get('filtered_file', None)
+    filename = request.data.get('output_file', None)
     
-    # Get filename from request if provided
-    filename = request.data.get('filename', None)
+    # Determine the filtered QA pairs file path
+    filtered_qa_pairs_path = FILTERED_QA_PAIRS_PATH
+    if filtered_file:
+        # Ensure the file has a .json extension
+        if not filtered_file.lower().endswith('.json'):
+            filtered_file = f"{filtered_file}.json"
+        filtered_qa_pairs_path = os.path.join(EVAL_DIR, filtered_file)
+    
+    # Check if filtered QA pairs exist
+    if not os.path.exists(filtered_qa_pairs_path):
+        return JsonResponse({"status": "error", "message": f"No filtered QA pairs found at {filtered_qa_pairs_path}. Filter QA pairs first."}, status=400)
     
     # Load filtered QA pairs
-    with open(FILTERED_QA_PAIRS_PATH, 'r') as f:
+    with open(filtered_qa_pairs_path, 'r') as f:
         filtered_pairs = json.load(f)
     
     # Evaluate RAG system
@@ -192,6 +270,6 @@ def evaluate_all_filtered_qa_pairs(request):
     
     return JsonResponse({
         "status": "success", 
-        "message": f"Evaluation is complete!", 
+        "message": f"Evaluation is complete! Results saved to {results.get('filename', 'unknown')}", 
         "results": results
     }) 

@@ -8,6 +8,7 @@
 - [Password Reset Configuration](#password-reset-configuration)
 - [Database Migrations](#database-migrations)
 - [Ollama Model Setup](#ollama-model-setup)
+- [Evaluating the Model](#evaluation-api-endpoints)
 
 ## Local Development
 
@@ -162,11 +163,52 @@ docker exec -it django_app python manage.py migrate
 <b>In llm_model.py and vectordb.py change the following section:</b>
 
 ```
-# Previous Version for local development
+# Previous Version for local development
 embeddings = OllamaEmbeddings(model="nomic-embed-text",base_url="http://host.docker.internal:11434")
 
-# New Version for container
+# New Version for container
 embeddings = OllamaEmbeddings(model="nomic-embed-text",base_url="http://ollama:11434")
 ```
+
+## Evaluation API Endpoints
+
+The system includes several API endpoints for evaluating the RAG system's performance.
+
+### POST `/chatbot/evaluation/generate/`
+Generates question-answer pairs for evaluation.
+**Parameters:**
+- `total_pairs` (integer, default: 10): Number of QA pairs to generate
+- `document_ids` (list, optional): List of document IDs to generate QA pairs from. If not provided, pairs are generated from all documents.
+- `output_file` (string, optional): Name of the file to save generated QA pairs under the evaluation directory. If not provided, the default file is used. The .json extension is automatically added if not included.
+
+### POST `/chatbot/evaluation/filter/`
+Filters QA pairs based on quality criteria. Requires QA pairs to be generated first.
+**Parameters:**
+- `qa_file` (string, optional): Name of the file containing QA pairs under the evaluation directory. If not provided, the default file is used. The .json extension is automatically added if not included.
+- `output_file` (string, optional): Name of the file to save filtered QA pairs under the evaluation directory. If not provided, the default file is used. The .json extension is automatically added if not included.
+
+### POST `/chatbot/evaluation/evaluate/pair/`
+Evaluates one or more QA pairs by ID from the filtered QA pairs.
+**Parameters:**
+- `id` (string or list): ID or list of IDs of QA pairs to evaluate
+- `filtered_file` (string, optional): Name of the file containing filtered QA pairs under the evaluation directory. If not provided, the default file is used. The .json extension is automatically added if not included.
+- `filename` (string, optional): Custom filename for saving evaluation results. The .json extension is automatically added if not included.
+
+### POST `/chatbot/evaluation/evaluate/all/`
+Evaluates all filtered QA pairs.
+**Parameters:**
+- `filtered_file` (string, optional): Name of the file containing filtered QA pairs under the evaluation directory. If not provided, the default file is used. The .json extension is automatically added if not included.
+- `filename` (string, optional): Custom filename for saving evaluation results. The .json extension is automatically added if not included.
+
+### GET `/chatbot/evaluation/data/`
+Retrieves all evaluation data including QA pairs, filtered pairs, and evaluation results.
+**Parameters:**
+- `qa_file` (string, optional): Name of the file containing QA pairs under the evaluation directory. If not provided, the default file is used. The .json extension is automatically added if not included.
+- `filtered_file` (string, optional): Name of the file containing filtered QA pairs under the evaluation directory. If not provided, the default file is used. The .json extension is automatically added if not included.
+- `results_file` (string, optional): Name of the file containing evaluation results under the evaluation directory. If not provided, the default file is used. The .json extension is automatically added if not included.
+
+
+
+
 
 

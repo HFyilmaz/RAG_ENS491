@@ -29,13 +29,14 @@ EVALUATION_RESULTS_PATH = os.path.join(EVAL_DIR, "evaluation_results.json")
 # Ensure evaluation directory exists
 os.makedirs(EVAL_DIR, exist_ok=True)
 
-def generate_qa_pairs(total_pairs: int = 10, document_sources: List[str] = None) -> List[Dict[str, Any]]:
+def generate_qa_pairs(total_pairs: int = 10, document_sources: List[str] = None, output_file: str = None) -> List[Dict[str, Any]]:
     """
     Generate question-answer pairs from the document chunks in the database.
     
     Args:
         total_pairs: Total number of QA pairs to generate
         document_sources: Optional list of document sources to filter by. If None, all documents are used.
+        output_file: Optional filename to save the generated QA pairs. If None, the default file is used.
         
     Returns:
         List of dictionaries containing question, answer, and source metadata
@@ -158,20 +159,30 @@ def generate_qa_pairs(total_pairs: int = 10, document_sources: List[str] = None)
         except Exception as e:
             logger.error(f"Error generating QA pair: {str(e)}")
             failed_to_generate += 1
+    
     # Save QA pairs to file
-    with open(QA_PAIRS_PATH, 'w') as f:
+    if output_file:
+        # Ensure the output file has a .json extension
+        if not output_file.lower().endswith('.json'):
+            output_file = f"{output_file}.json"
+        output_path = os.path.join(EVAL_DIR, output_file)
+    else:
+        output_path = QA_PAIRS_PATH
+    
+    with open(output_path, 'w') as f:
         json.dump(qa_pairs, f, indent=2)
     
-    logger.info(f"Generated {len(qa_pairs)} QA pairs in total")
+    logger.info(f"Generated {len(qa_pairs)} QA pairs in total and saved to {output_path}")
     return qa_pairs
 
-def filter_qa_pairs(qa_pairs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def filter_qa_pairs(qa_pairs: List[Dict[str, Any]], output_file: str = None) -> List[Dict[str, Any]]:
     """
     Filter QA pairs based on quality criteria using an LLM as judge.
     QA pairs must score at least 4 out of 5 on both groundedness and standalone criteria.
     
     Args:
         qa_pairs: List of QA pairs to filter
+        output_file: Optional filename to save the filtered QA pairs. If None, the default file is used.
         
     Returns:
         Filtered list of QA pairs with quality scores
@@ -297,9 +308,19 @@ def filter_qa_pairs(qa_pairs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         except Exception as e:
             logger.error(f"Error filtering QA pair {qa_id}: {str(e)}")
     
-    with open(FILTERED_QA_PAIRS_PATH, 'w') as f:
+    # Save filtered QA pairs to file
+    if output_file:
+        # Ensure the output file has a .json extension
+        if not output_file.lower().endswith('.json'):
+            output_file = f"{output_file}.json"
+        output_path = os.path.join(EVAL_DIR, output_file)
+    else:
+        output_path = FILTERED_QA_PAIRS_PATH
+    
+    with open(output_path, 'w') as f:
         json.dump(filtered_pairs, f, indent=2)
     
+    logger.info(f"Filtered {len(qa_pairs)} QA pairs down to {len(filtered_pairs)} pairs and saved to {output_path}")
     return filtered_pairs
 
 def get_unique_evaluation_filename(provided_name=None):
@@ -313,9 +334,9 @@ def get_unique_evaluation_filename(provided_name=None):
         A unique filename for the evaluation results
     """
     if provided_name:
-        # If a name is provided, ensure it has the .json extension
-        if not provided_name.endswith('.json'):
-            provided_name += '.json'
+        # Ensure the provided name has a .json extension
+        if not provided_name.lower().endswith('.json'):
+            provided_name = f"{provided_name}.json"
         
         # Check if a file with this name already exists
         full_path = os.path.join(EVAL_DIR, provided_name)
