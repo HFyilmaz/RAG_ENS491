@@ -7,6 +7,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+import time
 
 from ..models import RagFile
 from ..evaluation import (
@@ -107,82 +108,69 @@ def filter_evaluation_qa_pairs(request):
         "filtered_qa_pairs": filtered_pairs,
     })
 
-''' TODO:
-    - Ensure that it calls the evaluation function in evaluation.py based on the id of the QA pair
-'''
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def evaluate_qa_pair(request):
-    """Evaluate a single QA pair."""
-    # Extract parameters from request
-    question = request.data.get('question')
-    reference_answer = request.data.get('reference_answer')
-    qa_id = request.data.get('id')  # Get the QA pair ID if provided
+    """Evaluate one or more QA pairs by ID from filtered QA pairs."""
+    # Extract QA pair ID(s) from request
+    qa_ids = request.data.get('id')
     
-    if not question or not reference_answer:
-        return JsonResponse({"status": "error", "message": "Question and reference answer are required"}, status=400)
+    # Handle both single ID and list of IDs
+    if not qa_ids:
+        return JsonResponse({"status": "error", "message": "QA pair ID(s) are required"}, status=400)
     
-    # Query the RAG system with the question
-    rag_response = query_llm(question, [])
-    rag_answer = rag_response["response_text"]
-    retrieved_sources = rag_response["sources"]
+    # Convert single ID to list for consistent processing
+    if not isinstance(qa_ids, list):
+        qa_ids = [qa_ids]
     
-    # Evaluate the response using the same method as in evaluate_rag_system
-    # But simplified for a single QA pair
-    from langchain_core.prompts import ChatPromptTemplate
-    from ..evaluation import llm_ollama
+    # Check if filtered QA pairs exist
+    if not os.path.exists(FILTERED_QA_PAIRS_PATH):
+        return JsonResponse({"status": "error", "message": "No filtered QA pairs found. Filter QA pairs first."}, status=400)
     
-    # Create evaluation prompt
-    eval_prompt = ChatPromptTemplate.from_messages([
-        ("system", """Evaluate the RAG system's answer based on the following criteria:
-        1. Relevance (0-10): How relevant is the generated answer to the question?
-        2. Faithfulness (0-10): Does the answer contain hallucinations or make claims not supported by the retrieved context?
-        3. Context Precision (0-10): Were the retrieved contexts helpful and necessary for answering the question?
-        4. Answer Correctness (0-10): How correct is the generated answer compared to the reference answer?
+    # Load filtered QA pairs
+    with open(FILTERED_QA_PAIRS_PATH, 'r') as f:
+        filtered_pairs = json.load(f)
+    
+    # Find the QA pairs with the given IDs
+    selected_pairs = []
+    not_found_ids = []
+    
+    for qa_id in qa_ids:
+        qa_pair = None
+        for pair in filtered_pairs:
+            if str(pair.get('id')) == str(qa_id):
+                qa_pair = pair
+                selected_pairs.append(qa_pair)
+                break
         
-        Format your response exactly as follows:
-        RELEVANCE: [score]
-        FAITHFULNESS: [score]
-        CONTEXT_PRECISION: [score]
-        ANSWER_CORRECTNESS: [score]
-        OVERALL: [average score]
-        REASONING: [brief explanation of your evaluation]"""),
-        ("human", f"QUESTION: {question}\n\nRAG SYSTEM ANSWER: {rag_answer}\n\nREFERENCE ANSWER: {reference_answer}")
-    ])
+        if not qa_pair:
+            not_found_ids.append(qa_id)
     
-    # Get evaluation results
-    evaluation = llm_ollama.invoke(eval_prompt.format())
+    if not selected_pairs:
+        return JsonResponse({"status": "error", "message": f"None of the requested QA pair IDs were found in filtered QA pairs", "not_found_ids": not_found_ids}, status=404)
     
-    # Parse scores
-    scores = {}
-    lines = evaluation.strip().split('\n')
+    # Generate a filename with the QA pair IDs
+    id_string = "_".join(str(qa_id) for qa_id in qa_ids[:3])
+    if len(qa_ids) > 3:
+        id_string += f"_and_{len(qa_ids) - 3}_more"
     
-    for line in lines:
-        if ':' in line:
-            key, value = line.split(':', 1)
-            key = key.strip().lower()
-            
-            if key in ['relevance', 'faithfulness', 'context_precision', 'answer_correctness', 'overall']:
-                try:
-                    scores[key] = float(value.strip()) / 10  # Convert to 0-1 scale
-                except ValueError:
-                    scores[key] = 0.0
+    filename = f"qa_evaluation_{id_string}_{int(time.time())}.json"
     
-    # Calculate overall score if not present
-    if 'overall' not in scores and len(scores) > 0:
-        scores['overall'] = sum(scores.values()) / len(scores)
+    # Evaluate the QA pairs
+    results = evaluate_rag_system(selected_pairs, filename)
     
-    result = {
-        "id": qa_id,  # Include the QA pair ID in the result
-        "question": question,
-        "reference_answer": reference_answer,
-        "rag_answer": rag_answer,
-        "retrieved_sources": retrieved_sources,
-        "scores": scores,
-        "evaluation": evaluation
+    # Include information about not found IDs if any
+    response_data = {
+        "status": "success", 
+        "message": f"Evaluation of {len(selected_pairs)} QA pair(s) is complete!", 
+        "results": results
     }
     
-    return JsonResponse({"status": "success", "result": result})
+    if not_found_ids:
+        response_data["warning"] = f"{len(not_found_ids)} QA pair ID(s) not found"
+        response_data["not_found_ids"] = not_found_ids
+    
+    return JsonResponse(response_data)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
