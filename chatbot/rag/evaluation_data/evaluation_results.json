@@ -1,263 +1,32 @@
 {
-  "qa_results": [
+  "qa_pairs": [
     {
-      "question": "What specific requirements must the mobile deformable barrier meet, as outlined in Annex 5 to this Regulation?",
-      "reference_answer": "According to the text, the mobile deformable barrier must have characteristics set out in Annex 5 to this Regulation. Additionally, the requirements for its examination are given in the appendices to Annex 5. Therefore, to provide a comprehensive answer, one would need to refer to Annex 5 and its appendices to identify the specific requirements that the mobile deformable barrier must meet.",
-      "rag_answer": "According to Annex 5, the mobile deformable barrier (MDB) must meet the following specific requirements:\n\n1. Total mass shall be 950 \u00b1 20 kg.\n2. The centre of gravity shall be situated within a certain range:\n\t* In the longitudinal median vertical plane\n\t* Within 10 mm\n\t* 1,000 \u00b1 30 mm behind the front axle\n\t* 500 \u00b1 30 mm above the ground\n\nThese requirements are specified in Section 1.2 of Annex 5.",
+      "id": 1,
+      "question": "What type of clothing is specified for the dummy in the system?",
+      "reference_answer": "The dummy is to be clothed in a form-fitting cotton stretch mid-calf length pant and may also wear a form-fitting cotton stretch shirt with short sleeves.",
+      "rag_answer": "According to the context, the type of clothing specified for the dummy is form-fitting cotton stretch garments with short sleeves and mid-calf length trousers. This is mentioned in paragraphs 2.9.1 and 7.3 does not provide information about clothing but it mentions a specific type of dummy (WorldSID 50th percentile adult male) that will be clothed in a similar manner. \n\nSpecifically, the context states:\n\"2.9.1. The instrumented dummies will be clothed in formfitting cotton stretch garments with short sleeves and mid-calf length trousers specified in FMVSS 208, drawings 78051-292 and 293 or their equivalent.\"",
       "retrieved_sources": [
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 95.pdf:31:0",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 95.pdf:24:1",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:48:7",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:23:1",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 95.pdf:36:3"
+        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:34:3",
+        "http://127.0.0.1:8000/media/rag_database/Regulation - 95.pdf:58:2",
+        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:34:4",
+        "http://127.0.0.1:8000/media/rag_database/Regulation - 95.pdf:67:1",
+        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:20:3"
       ],
-      "expected_source": "",
-      "scores": {
-        "relevance": 0.8,
-        "faithfulness": 0.9,
-        "context_precision": 0.7,
-        "answer_correctness": 0.6,
-        "overall": 0.74
-      },
-      "evaluation": "RELEVANCE: 8\nThe RAG system's answer is highly relevant to the question as it provides specific requirements for the mobile deformable barrier from Annex 5.\n\nFAITHFULNESS: 9\nThe RAG system's answer contains no hallucinations and only makes claims that are directly supported by the retrieved context, although some minor omissions might be present.\n\nCONTEXT_PRECISION: 7\nWhile the RAG system managed to retrieve the relevant section of the text (Annex 5), it is unclear whether all necessary contexts were considered. The reference answer suggests that Annex 5 and its appendices are essential for providing a comprehensive understanding, but the RAG system's answer seems to focus only on Section 1.2.\n\nANSWER_CORRECTNESS: 6\nThe generated answer appears to be partially correct in terms of specific requirements but fails to provide a complete or nuanced understanding as suggested by the reference answer.\n\nOVERALL: 7.4\n\nREASONING:\nWhile the RAG system's answer provides some relevant information about the mobile deformable barrier, it falls short in several areas. The relevance and faithfulness are high because the generated answer sticks closely to the retrieved context without making unsubstantiated claims. However, the context precision could be improved by considering more comprehensive sources (e.g., Annex 5 and its appendices), which would increase the overall correctness of the answer."
-    },
-    {
-      "question": "What is the specific component that, according to the given text, requires a force transducer or its replacement?",
-      "reference_answer": "The force transducer or its replacement is required for the \"Force transducer or replacement\" (component 8f).",
-      "rag_answer": "Based on the context provided, the relevant part of the vehicle structure used for the mechanical protection of the REESS (Energy Storage System) components can define the parts that require a force transducer. However, it is not explicitly stated in the text which specific component requires a force transducer or its replacement.\n\nBut, according to the text, \"transducers\" are mentioned in general as devices that should be rigidly secured and have a lowest resonance frequency equal to at least 5 times the frequency F of the data channel considered. Acceleration transducers in particular, but it does not explicitly state which component requires the replacement of the transducer.",
-      "retrieved_sources": [
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 100.pdf:19:6",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 100.pdf:19:4",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:30:1",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 100.pdf:77:0",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:43:2"
-      ],
-      "expected_source": "",
-      "scores": {
-        "relevance": 0.6,
-        "faithfulness": 0.8,
-        "context_precision": 0.4,
-        "answer_correctness": 0.0,
-        "overall": 0.4
-      },
-      "evaluation": "RELEVANCE: 6\nThe answer is relevant to the question as it discusses the requirement for a force transducer, but it doesn't directly answer which specific component requires it.\n\nFAITHFULNESS: 8\nThe answer does not contain hallucinations and makes claims that are supported by the retrieved context. However, it's worth noting that the answer could be more precise in its interpretation of the text.\n\nCONTEXT_PRECISION: 4\nThe retrieved contexts provided some information about force transducers, but they were not entirely helpful or necessary for answering the question. The relevant part of the vehicle structure is mentioned, but it doesn't directly answer which component requires a force transducer or its replacement.\n\nANSWER_CORRECTNESS: 0\nThe generated answer does not accurately reflect the reference answer, which explicitly states that the \"Force transducer or replacement\" (component 8f) is the specific component requiring a force transducer or its replacement.\n\nOVERALL: 4.00\n\nREASONING:\nThe RAG system's answer was relevant to the question but lacked precision and correctness. While it provided some context, it failed to directly address which component requires a force transducer or its replacement. The correct reference answer was not accurately reflected in the generated response."
-    },
-    {
-      "question": "What is the purpose of Annex 2, as mentioned in paragraph 4.8?",
-      "reference_answer": "According to paragraph 4.8, the purpose of Annex 2 is to provide examples of the arrangements of approval marks. This implies that Annex 2 serves as a reference guide or template for manufacturers to follow when displaying the approval mark on their vehicles, ensuring consistency and clarity in its placement and presentation.",
-      "rag_answer": "According to the provided context, Annex 2 is related to \"Schematics or drawing of the general arrangement of electrical and/or electronic components (concerned by this Regulation) and the general wiring harness arrangement.\" \n\nTherefore, the purpose of Annex 2 is to provide schematics or drawings that show the general arrangement of electrical and electronic components, as well as the general wiring harness arrangement, in relation to a specific regulation.",
-      "retrieved_sources": [
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 10.pdf:53:7",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:8:7",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 10.pdf:154:3",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 95.pdf:23:1",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 100.pdf:26:2"
-      ],
-      "expected_source": "",
-      "scores": {
-        "relevance": 0.9,
-        "faithfulness": 0.0,
-        "context_precision": 0.6,
-        "answer_correctness": 0.0,
-        "overall": 0.0
-      },
-      "evaluation": "RELEVANCE: 9\nThe RAG system's answer is highly relevant to the question, addressing the specific purpose of Annex 2 mentioned in paragraph 4.8.\n\nFAITHFULNESS: 0\nThe RAG system's answer contains a significant hallucination - it claims that Annex 2 provides schematics or drawings related to electrical and electronic components, which is not supported by the retrieved context. The reference answer reveals that the purpose of Annex 2 is actually to provide examples of approval mark arrangements.\n\nCONTEXT_PRECISION: 6\nThe RAG system's answer does not provide enough context or necessary information for answering the question correctly. It fails to mention the actual purpose of Annex 2, as mentioned in paragraph 4.8, which relates to approval marks rather than electrical and electronic components.\n\nANSWER_CORRECTNESS: 0\nThe RAG system's answer is entirely incorrect compared to the reference answer.\n\nOVERALL: (5)\nThe RAG system's answer scored an average of 5 out of 10 based on the evaluation criteria.\n\nREASONING:\nThe RAG system's answer failed to accurately capture the purpose of Annex 2 mentioned in paragraph 4.8, instead introducing a hallucination related to electrical and electronic components. This demonstrates a lack of faithfulness to the retrieved context, leading to an overall score of 5."
-    },
-    {
-      "question": "What specific actions should be taken to prepare the impactor face before conducting the test, according to the provided text?",
-      "reference_answer": "According to the text, the impactor face should be prepared by cleaning it with isopropyl alcohol or an equivalent substance prior to the test. This preparation step aims to ensure that the impactor face is free from any contaminants or debris that could affect the accuracy of the results. Specifically, the text states that \"the impactor face with isopropyl alcohol or equivalent\" should be cleaned before proceeding with the test.",
-      "rag_answer": "According to Section 1.3.2 of the provided text, the impactor face should be cleaned with isopropyl alcohol or equivalent prior to the test, and then dusted with talc.",
-      "retrieved_sources": [
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:55:3",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:54:2",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:56:4",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 95.pdf:69:4",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:49:0"
-      ],
-      "expected_source": "",
-      "scores": {
-        "relevance": 0.8,
-        "faithfulness": 0.9,
-        "context_precision": 0.8,
-        "answer_correctness": 0.9,
-        "overall": 0.8400000000000001
-      },
-      "evaluation": "RELEVANCE: 8\nThe answer is relevant to the question as it provides specific actions to prepare the impactor face.\n\nFAITHFULNESS: 9\nThe answer contains no hallucinations and only makes claims supported by the retrieved context, although there is a slight discrepancy in detail (talc vs. unspecified dusting).\n\nCONTEXT_PRECISION: 8\nThe retrieved contexts are helpful for answering the question, but could be more precise as they don't fully explain why cleaning with isopropyl alcohol is necessary.\n\nANSWER_CORRECTNESS: 9\nThe generated answer matches the reference answer closely, except for the minor difference in dusting.\n\nOVERALL: 8.4\n\nREASONING: The RAG system's answer is mostly faithful to the retrieved context and correctly identifies specific actions to prepare the impactor face. However, there are some slight discrepancies and omissions that could be improved upon."
-    },
-    {
-      "question": "What specific condition must be met in order for the Head Performance Criterion (HPC36) to be considered satisfied during a test?",
-      "reference_answer": "According to section 1.1 of Annex 4, the Head Performance Criterion (HPC36) is considered to be satisfied when there is no contact between the head and any vehicle component during the test.",
-      "rag_answer": "According to the provided context, specifically from Annex 4 - Appendix 1 of E/ECE/324/Rev.1/Add.94/Rev.4 and E/ECE/TRANS/505/Rev.1/Add.94/Rev.4, the specific condition that must be met for the Head Performance Criterion (HPC36) to be considered satisfied during a test is:\n\n\"There is no contact between the head and any vehicle component.\"\n\nThis is stated in paragraph 1.1 of Annex 4 - Appendix 1.",
-      "retrieved_sources": [
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:29:0",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 95.pdf:29:0",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 95.pdf:11:4",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:3:6",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:10:0"
-      ],
-      "expected_source": "",
-      "scores": {
-        "relevance": 1.0,
-        "faithfulness": 0.9,
-        "context_precision": 1.0,
-        "answer_correctness": 0.9,
-        "overall": 0.93
-      },
-      "evaluation": "RELEVANCE: 10\nFAITHFULNESS: 9\nCONTEXT_PRECISION: 10\nANSWER_CORRECTNESS: 9\nOVERALL: 9.3\nREASONING:\n\nThe RAG system's answer is highly relevant to the question, addressing the specific condition for satisfying the Head Performance Criterion (HPC36). \n\nThe system's answer shows good faithfulness as it directly quotes from the provided context and accurately reports the condition stated in paragraph 1.1 of Annex 4 - Appendix 1.\n\nThe retrieved contexts are extremely helpful and necessary for answering the question, providing direct evidence from Annex 4 - Appendix 1.\n\nWhile there is a minor discrepancy between the system's answer and the reference answer (e.g., \"According to the provided context\" vs. \"According to section 1.1 of Annex 4\"), both answers convey the same information. The system's answer scores slightly lower in correctness due to this minor difference, but it does not significantly impact the overall evaluation.\n\nThe system demonstrated excellent performance by accurately retrieving relevant and faithful information from the provided contexts."
-    },
-    {
-      "question": "What is the maximum viscous criterion (V * C) for the thorax that should not be exceeded, according to paragraph 5.2.1.5?",
-      "reference_answer": "According to paragraph 5.2.1.5 of the provided text, the maximum viscous criterion (V * C) for the thorax shall not exceed 1.0 m/s.",
-      "rag_answer": "Unfortunately, I do not see any mention of a specific value for the maximum viscous criterion (V * C) in the provided context. The context only mentions the calculation and measurement methods for V * C, but it does not specify a threshold or limit that should not be exceeded.\n\nHowever, I can suggest some possible sources where this information might be found:\n\n* E/ECE/324/Rev.1/Add.93/Rev.4\n* E/ECE/TRANS/505/Rev.1/Add.93/Rev.4\n\nThese documents are part of the annexes and seem to be related to vehicle safety standards, specifically for crash testing. It's possible that a specific section or paragraph within these documents specifies a maximum V * C value.\n\nI'm sorry I couldn't provide more definitive information from the context provided.",
-      "retrieved_sources": [
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 95.pdf:29:2",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:30:0",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 95.pdf:30:0",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:30:4",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 95.pdf:29:1"
-      ],
-      "expected_source": "",
-      "scores": {
-        "relevance": 0.6,
-        "faithfulness": 0.9,
-        "context_precision": 0.4,
-        "answer_correctness": 0.0,
-        "overall": 0.475
-      },
-      "evaluation": "RELEVANCE: 6\nThe answer is relevant because it directly addresses the question about the maximum viscous criterion (V * C). However, the system's inability to find a specific value in the provided context reduces its relevance.\n\nFAITHFULNESS: 9\nThe RAG system's answer does not contain any hallucinations or unsubstantiated claims. It correctly states that it couldn't find a specific value for V * C in the provided context and suggests possible sources where this information might be found.\n\nCONTEXT_PRECISION: 4\nThe RAG system failed to retrieve the relevant context, specifically paragraph 5.2.1.5, which contains the answer to the question. This reduced its ability to provide an accurate answer.\n\nANSWER_CORRECTNESS: 0\nUnfortunately, the RAG system's answer is incorrect because it states that no specific value for V * C is mentioned in the context when, in fact, paragraph 5.2.1.5 specifies a maximum value of 1.0 m/s.\n\nOVERALL: 4.75\nThe average score reflects the mixed evaluation of the RAG system's answer. While it was faithful and provided relevant information, its inability to retrieve the correct context and provide an accurate answer detract from its overall performance.\n\nREASONING: The RAG system failed to correctly interpret the provided text and identify paragraph 5.2.1.5 as the source of the maximum V * C value. Its inability to retrieve this specific context led to an incomplete and incorrect answer."
-    },
-    {
-      "question": "What is the specific range within which the torso angle of the driver should be adjusted according to the provided text?",
-      "reference_answer": "According to section 7.22.1, the torso angle should be adjusted within a range of 23\u00b0 \u00b1 1\u00b0. This means that the actual torso angle should be as close to 23\u00b0 as possible, but it can deviate by up to 1\u00b0 in either direction (i.e., between 22\u00b0 and 24\u00b0).",
-      "rag_answer": "According to the provided text, the specific range within which the torso angle of the driver should be adjusted is 23\u00b0 \u00b1 1\u00b0. This is mentioned in several places throughout the text, including sections 7.21.1 and 7.22.1.",
-      "retrieved_sources": [
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:28:6",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:28:5",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:32:4",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:30:5",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:16:3"
-      ],
-      "expected_source": "",
-      "scores": {
-        "relevance": 1.0,
-        "faithfulness": 0.9,
-        "context_precision": 0.8,
-        "answer_correctness": 0.9,
-        "overall": 0.925
-      },
-      "evaluation": "RELEVANCE: 10\nFAITHFULNESS: 9\nCONTEXT_PRECISION: 8\nANSWER_CORRECTNESS: 9\nOVERALL: 9.25\nREASONING:\nThe RAG system's answer is highly relevant to the question, providing a specific range for adjusting the torso angle of the driver as requested.\nHowever, it contains some minor issues with faithfulness, stating that the information is mentioned in several places throughout the text, when in fact, it only appears in section 7.22.1.\nContext precision is somewhat low since the retrieved context could have been more specific to the question at hand, but it does provide necessary information for answering the question.\nAnswer correctness is high, with the RAG system's answer matching the reference answer almost perfectly.\nThe overall score reflects a well-performing response that requires minor improvements."
-    },
-    {
-      "question": "What is the value of the coefficient used in the calculation of \u03c1o', and how does it relate to the units of measurement involved?",
-      "reference_answer": "The coefficient used in the calculation of \u03c1o' is -0.0043. This value is a part of a quadratic equation (\u03c1o' = \u20130.0043 x (P0')2 + 1.53 x P0' + 1.49) that calculates the density of helium in the storage system, specifically at the initial time interval (Po'). The negative sign and small magnitude of -0.0043 indicate a nonlinear relationship between the squared pressure term and the resulting density value. However, it is essential to note that this coefficient does not directly relate to any specific unit of measurement involved in the problem. Instead, it is part of a mathematical formula designed to estimate the helium density as a function of initial pressure (Po').",
-      "rag_answer": "Based on the provided context, I don't see any direct mention of the coefficient \"\u03c1o'\" or its relation to the units of measurement. However, there is a mention of \"sensitivity coefficient\" in paragraph 1.6, but it doesn't seem directly related to the coefficient you're asking about.\n\nThat being said, the calculation involving Ri and Ro (paragraph 1.2.3.5) does involve some coefficients or values that are used for calculation purposes. Unfortunately, I don't see any explicit mention of \"\u03c1o'\" in this context.\n\nIf you could provide more information or clarify what coefficient \"\u03c1o'\" refers to, I'd be happy to try and help further!",
-      "retrieved_sources": [
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 100.pdf:46:1",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 100.pdf:46:2",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 100.pdf:64:3",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 100.pdf:64:4",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:40:3"
-      ],
-      "expected_source": "",
-      "scores": {
-        "relevance": 0.9,
-        "faithfulness": 0.8,
-        "context_precision": 0.7,
-        "answer_correctness": 0.4,
-        "overall": 0.72
-      },
-      "evaluation": "RELEVANCE: 9\nThe generated answer is relevant to the question because it attempts to address the query about the coefficient used in the calculation of \u03c1o' and its relation to units of measurement.\n\nFAITHFULNESS: 8\nThe RAG system's answer does not contain any obvious hallucinations, but it fails to provide a clear and direct answer to the question. Instead, it acknowledges the lack of information in the provided context and asks for clarification on what coefficient \"\u03c1o'\" refers to.\n\nCONTEXT_PRECISION: 7\nWhile the retrieved contexts are somewhat relevant to the question, they do not provide enough information to directly answer the query about the value of the coefficient used in the calculation of \u03c1o' and its relation to units of measurement. The context does mention coefficients and values used for calculation purposes, but it is unclear how this relates to the specific coefficient asked about.\n\nANSWER_CORRECTNESS: 4\nThe generated answer does not accurately reflect the reference answer provided. The RAG system's answer fails to provide a clear value for the coefficient \"\u03c1o'\" and its relation to units of measurement, whereas the reference answer provides a specific value (-0.0043) and explains its context within a quadratic equation.\n\nOVERALL: 7.2\nThe average score is a reflection of the RAG system's performance in addressing the question. While it attempts to provide a relevant answer, its lack of faithfulness and correct understanding of the coefficient \"\u03c1o'\" negatively impacts its overall evaluation.\n\nREASONING: The generated answer demonstrates some relevance to the question but struggles with providing accurate information about the coefficient used in the calculation of \u03c1o' and its relation to units of measurement. It acknowledges uncertainty and asks for clarification, which is a reasonable approach given the limitations of the provided context. However, this lack of clarity and understanding ultimately leads to a lower overall score."
-    },
-    {
-      "question": "What are the specifications for the WorldSID 50th male build level as stated in the text?",
-      "reference_answer": "The text does not provide specific information about the specifications of the WorldSID 50th male build level, but it mentions that a value is provided under question 7. Therefore, according to the text, the specification for the WorldSID 50th male build level is listed under item 7 and can be found in the actual text provided.",
-      "rag_answer": "According to section 7 of the provided text, the specifications for the WorldSID 50th male build level are mentioned as follows:\n\n\"WorldSID 50th male build level/specifications: .....................................................\"\n\nUnfortunately, this section appears to be blank, indicating that no specific specifications were provided in the context.",
-      "retrieved_sources": [
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:9:5",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:14:2",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:22:0",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:9:6",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:42:0"
-      ],
-      "expected_source": "",
-      "scores": {
-        "relevance": 0.8,
-        "faithfulness": 0.9,
-        "context_precision": 0.8,
-        "answer_correctness": 0.9,
-        "overall": 0.8400000000000001
-      },
-      "evaluation": "RELEVANCE: 8\nThe answer is highly relevant as it directly addresses the question and provides context from the retrieved document.\n\nFAITHFULNESS: 9\nThe answer accurately reflects the content of the retrieved context, which indicates that no specific specifications were mentioned for the WorldSID 50th male build level. The only claim made is that the specification can be found under item 7 in the text, which aligns with the reference answer.\n\nCONTEXT_PRECISION: 8\nThe retrieved context is helpful as it directly addresses the question and provides a clear indication of where to find additional information about the WorldSID 50th male build level. However, it would have been more precise if it had explicitly stated that no specifications were provided in the text.\n\nANSWER_CORRECTNESS: 9\nThe answer accurately reflects the content of the reference answer, which indicates that no specific specifications are mentioned for the WorldSID 50th male build level.\n\nOVERALL: 8.4\n\nREASONING: The RAG system's answer is highly relevant and faithful to the retrieved context, but could have been more precise in its wording. However, it accurately reflects the content of the reference answer, making it a correct response to the question posed."
-    },
-    {
-      "question": "What is the primary control mechanism mentioned in paragraph 7.6 for adjusting the angle of the seat back independently of the seat cushion pitch?",
-      "reference_answer": "According to the provided text, the primary control mechanism mentioned in paragraph 7.6 for adjusting the angle of the seat back independently of the seat cushion pitch is \"the control(s) which primarily adjusts the angle of the seat back\". This is stated explicitly in the sentence \"Using only the control(s) which primarily adjusts the angle of the seat back...\".",
-      "rag_answer": "According to paragraph 7.6, the primary control(s) that adjust the angle of the seat back independently of the seat cushion pitch are \"the control(s) which primarily adjusts the angle of the seat back\". There is no further specification given in paragraph 7.6 as to what type of control mechanism this refers to (e.g., lever, button, knob).",
-      "retrieved_sources": [
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:26:4",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:25:4",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:28:5",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:25:3",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:25:2"
-      ],
-      "expected_source": "",
-      "scores": {
-        "relevance": 1.0,
-        "faithfulness": 0.0,
-        "context_precision": 0.0,
-        "answer_correctness": 0.0,
-        "overall": 0.35
-      },
-      "evaluation": "RELEVANCE: 10\nFAITHFULNESS: 0 (The RAG system's answer contains a hallucination, as it suggests that the text does not provide further specification on the type of control mechanism, but in fact, the reference answer explicitly states that there is no need for any additional information.)\nCONTEXT_PRECISION: 6 (While the RAG system has correctly identified the relevant context from paragraph 7.6, the answer could be more precise and accurate in its description of the control mechanism.)\nANSWER_CORRECTNESS: 0 (The RAG system's answer is incorrect compared to the reference answer, as it introduces ambiguity about the type of control mechanism mentioned.)\n\nOVERALL: 3.5\n\nREASONING: The RAG system has partially captured the relevant context from paragraph 7.6, but its faithfulness and correctness scores are low due to the presence of a hallucination and an incorrect description of the control mechanism. The system would benefit from more precise and accurate processing of the provided text."
-    },
-    {
-      "question": "What specific type of electrical connection to the REESS is required for this test procedure, according to the manufacturer's instructions?",
-      "reference_answer": "According to the provided text, the test procedure applicable to REESS vehicles with the capability of charging by DC external electricity supply requires that the manufacturer provides information on how to connect a breakout harness to a location just outside the REESS.",
-      "rag_answer": "According to the provided context, the specific type of electrical connection to the REESS is a short circuit with a resistance not exceeding 5 m\u03a9. This is mentioned in Section \"3. Procedures\" under the sub-section \"For testing with a complete REESS or REESS subsystem(s), ...\".\n\nSpecifically, it states: \"The positive and negative terminals of the Tested-Device shall be connected to each other to produce a short circuit. The connection used for this purpose shall have a resistance not exceeding 5 m\u03a9.\"",
-      "retrieved_sources": [
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 100.pdf:84:5",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 100.pdf:73:2",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 100.pdf:78:2",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 100.pdf:84:1",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 100.pdf:5:6"
-      ],
-      "expected_source": "",
-      "scores": {
-        "relevance": 0.8,
-        "faithfulness": 0.9,
-        "context_precision": 0.6,
-        "answer_correctness": 0.2,
-        "overall": 0.55
-      },
-      "evaluation": "RELEVANCE: 8\nFAITHFULNESS: 9\nCONTEXT_PRECISION: 6\nANSWER_CORRECTNESS: 2\nOVERALL: 5.5\nREASONING:\nThe answer provided by the RAG system is relevant to the question, but it does not directly address what type of electrical connection is required. Instead, it describes a specific detail about the connection's resistance, which while related, is not the primary requirement mentioned in the reference answer. The answer contains no hallucinations, and the context retrieved is somewhat helpful but incomplete for answering the question accurately. The generated answer is incorrect compared to the reference answer, as it focuses on the characteristics of the connection rather than its purpose or method of implementation."
-    },
-    {
-      "question": "What is specifically mentioned in the text as the location where methods for measuring radiated broadband electromagnetic emissions from electrical/electronic sub-assemblies are discussed?",
-      "reference_answer": "According to the provided text, the location where methods for measuring radiated broadband electromagnetic emissions from electrical/electronic sub-assemblies (ESAs) are discussed is specified in Section 7, which starts on page 92.",
-      "rag_answer": "According to the provided text, Annex 7 of document E/ECE/324/Add.9/Rev.6 is specifically mentioned as the location where methods for measuring radiated broadband electromagnetic emissions from electrical/electronic sub-assemblies are discussed.\n\n Quote from the text:\n\"Annex 7 \n Method of measurement of radiated broadband electromagnetic emissions from electrical/electronic sub-assemblies (ESAs)\"",
-      "retrieved_sources": [
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 10.pdf:92:0",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 10.pdf:61:0",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 10.pdf:6:0",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 10.pdf:3:5",
-        "http://127.0.0.1:8000/media/rag_database/Regulation - 10.pdf:98:0"
-      ],
-      "expected_source": "",
-      "scores": {
-        "relevance": 0.8,
-        "faithfulness": 0.9,
-        "context_precision": 0.6,
-        "answer_correctness": 0.5,
-        "overall": 0.0
-      },
-      "evaluation": "RELEVANCE: 8\nThe answer is highly relevant as it directly addresses the question and provides a specific location mentioned in the text.\n\nFAITHFULNESS: 9\nThe answer contains no hallucinations and accurately reflects the information provided in the quote from the text, making it faithful to the context.\n\nCONTEXT_PRECISION: 6\nWhile the retrieved contexts help identify the correct location (Annex 7), they could be more precise by directly stating that Section 7 is not mentioned as the correct answer but rather Annex 7. However, this minor discrepancy does not significantly impact the overall evaluation.\n\nANSWER_CORRECTNESS: 5\nThe generated answer partially aligns with the reference answer in terms of mentioning a specific location for discussing methods related to radiated broadband electromagnetic emissions from electrical/electronic sub-assemblies. However, it incorrectly states that Annex 7 is the relevant section when Section 7 on page 92 is indeed mentioned as the correct location.\n\nOVERALL: (8+9+6+5)/4 = 7.25\n\nREASONING:\nThe RAG system's answer demonstrates good faithfulness and relevance but falls short in terms of context precision and answer correctness due to a minor misinterpretation of Section 7 being irrelevant while Annex 7 is correct, despite both referring to radiated broadband electromagnetic emissions from electrical/electronic sub-assemblies."
+      "evaluation": {
+        "feedback": "The response accurately identifies the type of clothing specified for the dummy as form-fitting cotton stretch garments. However, it includes additional information not present in the reference answer, specifically mentioning short sleeves in paragraph 7.3. Additionally, the response states that mid-calf length trousers are specified, whereas the reference answer only mentions mid-calf length pant, which implies a single garment rather than specifying both pants and trousers.",
+        "score": 4
+      }
     }
   ],
-  "metrics": {
-    "relevance": 0.8333333333333334,
-    "faithfulness": 0.7333333333333334,
-    "context_precision": 0.6166666666666666,
-    "answer_correctness": 0.44166666666666665,
-    "overall_score": 0.0
+  "summary": {
+    "total_pairs": 1,
+    "average_score": 4.0,
+    "scores_distribution": {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 1,
+      "5": 0
+    }
   }
 }

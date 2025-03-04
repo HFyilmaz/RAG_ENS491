@@ -1,0 +1,32 @@
+{
+  "qa_pairs": [
+    {
+      "id": 1,
+      "question": "What type of clothing is specified for the dummy in the system?",
+      "reference_answer": "The dummy is to be clothed in a form-fitting cotton stretch mid-calf length pant and may also wear a form-fitting cotton stretch shirt with short sleeves.",
+      "rag_answer": "According to the context, the clothing specified for the dummy is form-fitting cotton stretch garments with short sleeves and mid-calf length trousers (paragraph 2.9.1). Additionally, a shoe that meets specific specifications (MIL S 13192, revision P) is also placed on each foot of the test dummies (paragraph 2.9.2).",
+      "retrieved_sources": [
+        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:34:3",
+        "http://127.0.0.1:8000/media/rag_database/Regulation - 95.pdf:58:2",
+        "http://127.0.0.1:8000/media/rag_database/Regulation - 94.pdf:34:4",
+        "http://127.0.0.1:8000/media/rag_database/Regulation - 95.pdf:67:1",
+        "http://127.0.0.1:8000/media/rag_database/Regulation - 135.pdf:20:3"
+      ],
+      "evaluation": {
+        "feedback": "The response accurately identifies the type of clothing specified for the dummy in the system. However, it includes additional information about a shoe that meets specific specifications, which is not relevant to the question being asked. This extra detail makes the response slightly more complex than necessary.",
+        "score": 4
+      }
+    }
+  ],
+  "summary": {
+    "total_pairs": 1,
+    "average_score": 4.0,
+    "scores_distribution": {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 1,
+      "5": 0
+    }
+  }
+}

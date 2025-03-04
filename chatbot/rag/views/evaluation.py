@@ -93,22 +93,23 @@ def filter_evaluation_qa_pairs(request):
     if not os.path.exists(QA_PAIRS_PATH):
         return JsonResponse({"status": "error", "message": "No QA pairs found. Generate QA pairs first."}, status=400)
     
-    # Extract parameters from request
-    quality_threshold = float(request.data.get('quality_threshold', 0.7))
-    
     # Load QA pairs
     with open(QA_PAIRS_PATH, 'r') as f:
         qa_pairs = json.load(f)
     
     # Filter QA pairs
-    filtered_pairs = filter_qa_pairs(qa_pairs, min_quality_score=quality_threshold)
+    filtered_pairs = filter_qa_pairs(qa_pairs)
     
     return JsonResponse({
         "status": "success", 
-        "message": f"Filtered to {len(filtered_pairs)} high-quality QA pairs", 
-        "filtered_qa_pairs": filtered_pairs
+        "message": f"Successfully filtered QA pairs", 
+        "filtered_pairs_count": len(filtered_pairs),
+        "filtered_qa_pairs": filtered_pairs,
     })
 
+''' TODO:
+    - Ensure that it calls the evaluation function in evaluation.py based on the id of the QA pair
+'''
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def evaluate_qa_pair(request):
@@ -191,16 +192,18 @@ def evaluate_all_filtered_qa_pairs(request):
     if not os.path.exists(FILTERED_QA_PAIRS_PATH):
         return JsonResponse({"status": "error", "message": "No filtered QA pairs found. Filter QA pairs first."}, status=400)
     
+    # Get filename from request if provided
+    filename = request.data.get('filename', None)
+    
     # Load filtered QA pairs
     with open(FILTERED_QA_PAIRS_PATH, 'r') as f:
         filtered_pairs = json.load(f)
     
     # Evaluate RAG system
-    results = evaluate_rag_system(filtered_pairs)
+    results = evaluate_rag_system(filtered_pairs, filename)
     
     return JsonResponse({
         "status": "success", 
-        "message": "Evaluation complete", 
-        "metrics": results["metrics"],
+        "message": f"Evaluation is complete!", 
         "results": results
     }) 

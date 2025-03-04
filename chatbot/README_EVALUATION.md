@@ -19,7 +19,6 @@ Each generated QA pair includes the following fields:
 - `answer`: The reference answer
 - `source`: Path to the source document
 - `page`: Page number in the source document (if applicable)
-- `chunk_id`: ID of the document chunk used to generate the QA pair
 - `chunk_content`: The text content of the document chunk
 
 After filtering, QA pairs also include:

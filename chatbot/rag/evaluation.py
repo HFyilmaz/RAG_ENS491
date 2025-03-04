@@ -6,7 +6,8 @@ from typing import List, Dict, Any, Tuple, Optional
 
 from django.conf import settings
 from langchain_ollama import OllamaLLM
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
+from langchain.schema import SystemMessage 
 from langchain_chroma import Chroma
 
 from .vectordb import get_embedding_function_ollama, split_documents, load_documents
@@ -107,12 +108,12 @@ def generate_qa_pairs(total_pairs: int = 10, document_sources: List[str] = None)
         
         # Create QA generation prompt
         qa_prompt = ChatPromptTemplate.from_messages([
-            ("system", """Generate a challenging but answerable question-answer pair based on the following text. 
-            The question should:
-            1. Be specific and focused on factual information in the text
-            2. Require a detailed understanding of the content
-            3. Not be answerable with general knowledge alone
-            
+            ("system", """
+            Your task is to write a factoid question and an answer given a context.
+            Your factoid question should be answerable with a specific, concise piece of factual information from the context.
+            Your factoid question should be formulated in the same style as questions users could ask in a search engine.
+            This means that your factoid question MUST NOT mention something like "according to the passage" or "context".
+
             Format your response exactly as:
             QUESTION: [your generated question]
             ANSWER: [comprehensive answer based strictly on the provided text]"""),
@@ -145,7 +146,6 @@ def generate_qa_pairs(total_pairs: int = 10, document_sources: List[str] = None)
                     "answer": answer,
                     "source": source,
                     "page": chunk.metadata.get("page", 0),
-                    "chunk_id": chunk.metadata.get("id", ""),
                     "chunk_content": chunk.page_content
                 })
                 logger.info(f"Generated QA pair {qa_pair_id}: {question[:50]}...")
@@ -165,13 +165,13 @@ def generate_qa_pairs(total_pairs: int = 10, document_sources: List[str] = None)
     logger.info(f"Generated {len(qa_pairs)} QA pairs in total")
     return qa_pairs
 
-def filter_qa_pairs(qa_pairs: List[Dict[str, Any]], min_quality_score: float = 0.7) -> List[Dict[str, Any]]:
+def filter_qa_pairs(qa_pairs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
     Filter QA pairs based on quality criteria using an LLM as judge.
+    QA pairs must score at least 4 out of 5 on both groundedness and standalone criteria.
     
     Args:
         qa_pairs: List of QA pairs to filter
-        min_quality_score: Minimum quality score (0-1) for a QA pair to pass the filter
         
     Returns:
         Filtered list of QA pairs with quality scores
@@ -180,105 +180,228 @@ def filter_qa_pairs(qa_pairs: List[Dict[str, Any]], min_quality_score: float = 0
     
     filtered_pairs = []
     
+    question_groundedness_critique_prompt = ChatPromptTemplate.from_messages([
+        ("system", """
+        You will be given a context and a question.
+        Your task is to provide a 'total rating' scoring how well one can answer the given question unambiguously with the given context.
+        Give your answer on a scale of 1 to 5, where 1 means that the question is not answerable at all given the context, and 5 means that the question is clearly and unambiguously answerable with the context.
+
+        Provide your answer as follows:
+
+        Answer:::
+        Evaluation: (your rationale for the rating, as a text)
+        Total rating: (your rating, as a number between 1 and 5)
+        
+        You MUST provide values for 'Evaluation:' and 'Total rating:' in your answer.
+
+        Now here are the question and context.
+
+        Question: {question}
+        Context: {context}
+        Answer:::
+        """),
+        ("human", "QUESTION: {question}\n\nANSWER: {answer}")
+    ])
+
+    question_standalone_critique_prompt = ChatPromptTemplate.from_messages([
+        ("system", """
+        You will be given a question.
+        Your task is to provide a 'total rating' representing how context-independent this question is.
+        Give your answer on a scale of 1 to 5, where 1 means that the question depends on additional information to be understood, and 5 means that the question makes sense by itself.
+        For instance, if the question refers to a particular setting, like 'in the context' or 'in the document', the rating must be 1.
+        The questions can contain obscure technical nouns or acronyms like Gradio, Hub, Hugging Face or Space and still be a 5: it must simply be clear to an operator with access to documentation what the question is about.
+
+        For instance, "What is the name of the checkpoint from which the ViT model is imported?" should receive a 1, since there is an implicit mention of a context, thus the question is not independent from the context.
+
+        Provide your answer as follows:
+
+        Answer:::
+        Evaluation: (your rationale for the rating, as a text)
+        Total rating: (your rating, as a number between 1 and 5)
+
+        You MUST provide values for 'Evaluation:' and 'Total rating:' in your answer.
+
+        Now here is the question.
+
+        Question: {question}
+        Answer::: 
+        """),
+        ("human", "QUESTION: {question}\n\nANSWER: {answer}")
+    ])
+
     for i, qa_pair in enumerate(qa_pairs):
         question = qa_pair["question"]
         reference_answer = qa_pair["answer"]
         context = qa_pair["chunk_content"]
-        qa_id = qa_pair.get("id", i+1)  # Use existing ID or fallback to index+1
+        source_file = qa_pair["source"]
+        source_page = qa_pair["page"]
+        qa_id = qa_pair.get("id", i+1)
         
         logger.info(f"Evaluating quality of QA pair {qa_id}: {question[:50]}...")
         
-        # Create filter criteria prompt
-        filter_prompt = ChatPromptTemplate.from_messages([
-            ("system", """Evaluate the quality of this question-answer pair based on the following criteria:
-            1. Groundedness: Does the answer strictly use information from the context? (0-10)
-            2. Relevance: Is the question relevant to the main topics in the context? (0-10)
-            3. Specificity: Is the question specific rather than general? (0-10)
-            4. Complexity: Does the question require reasoning rather than just fact retrieval? (0-10)
-            5. Clarity: Is the question clearly formulated? (0-10)
-            
-            Format your response exactly as follows:
-            GROUNDEDNESS: [score]
-            RELEVANCE: [score]
-            SPECIFICITY: [score]
-            COMPLEXITY: [score]
-            CLARITY: [score]
-            OVERALL: [average score]
-            REASONING: [brief explanation of your evaluation]"""),
-            ("human", f"CONTEXT: {context}\n\nQUESTION: {question}\n\nREFERENCE ANSWER: {reference_answer}")
-        ])
-        
         try:
-            # Get quality evaluation
-            result = llm_ollama.invoke(filter_prompt.format())
+            # Evaluate groundedness
+            groundedness_prompt = question_groundedness_critique_prompt.format(
+                question=question,
+                context=context,
+                answer=reference_answer
+            )
+            groundedness_result = llm_ollama.invoke(groundedness_prompt)
             
-            # Parse scores
-            scores = {}
-            lines = result.strip().split('\n')
+            # Evaluate standalone quality
+            standalone_prompt = question_standalone_critique_prompt.format(
+                question=question,
+                answer=reference_answer
+            )
+            standalone_result = llm_ollama.invoke(standalone_prompt)
             
-            for line in lines:
-                if ':' in line:
-                    key, value = line.split(':', 1)
-                    key = key.strip().lower()
-                    
-                    if key in ['groundedness', 'relevance', 'specificity', 'complexity', 'clarity', 'overall']:
-                        try:
-                            scores[key] = float(value.strip()) / 10  # Convert to 0-1 scale
-                        except ValueError:
-                            scores[key] = 0.0
+            # Parse groundedness evaluation
+            groundedness_evaluation = ""
+            groundedness_rating = 0
             
-            # Check if we have an overall score
-            if 'overall' not in scores and len(scores) > 0:
-                scores['overall'] = sum(scores.values()) / len(scores)
+            for line in groundedness_result.strip().split('\n'):
+                if line.lower().startswith("evaluation:"):
+                    groundedness_evaluation = line.split(":", 1)[1].strip()
+                elif line.lower().startswith("total rating:"):
+                    try:
+                        groundedness_rating = float(line.split(":", 1)[1].strip())
+                    except ValueError:
+                        groundedness_rating = 0
             
-            # Add quality scores to the QA pair
-            qa_pair['quality_scores'] = scores
-            qa_pair['quality_evaluation'] = result
+            # Parse standalone evaluation
+            standalone_evaluation = ""
+            standalone_rating = 0
             
-            # Filter based on quality
-            if scores.get('overall', 0) >= min_quality_score:
-                filtered_pairs.append(qa_pair)
-                logger.info(f"QA pair {qa_id} passed filter ({scores.get('overall', 0):.2f}): {question[:50]}...")
-            else:
-                logger.info(f"QA pair {qa_id} failed filter ({scores.get('overall', 0):.2f}): {question[:50]}...")
-                
+            for line in standalone_result.strip().split('\n'):
+                if line.lower().startswith("evaluation:"):
+                    standalone_evaluation = line.split(":", 1)[1].strip()
+                elif line.lower().startswith("total rating:"):
+                    try:
+                        standalone_rating = float(line.split(":", 1)[1].strip())
+                    except ValueError:
+                        standalone_rating = 0
+            
+            # Store evaluations and ratings in the QA pair
+            qa_pair['groundedness'] = {
+                'evaluation': groundedness_evaluation,
+                'rating': groundedness_rating
+            }
+            qa_pair['standalone'] = {
+                'evaluation': standalone_evaluation,
+                'rating': standalone_rating
+            }
+            
+            qa_pair['passed_filter'] = groundedness_rating >= 4 and standalone_rating >= 4
+            filtered_pairs.append(qa_pair)
+
         except Exception as e:
             logger.error(f"Error filtering QA pair {qa_id}: {str(e)}")
     
-    # Save filtered QA pairs to file
     with open(FILTERED_QA_PAIRS_PATH, 'w') as f:
         json.dump(filtered_pairs, f, indent=2)
     
-    logger.info(f"{len(filtered_pairs)} QA pairs passed quality filtering")
     return filtered_pairs
 
-def evaluate_rag_system(qa_pairs: List[Dict[str, Any]]) -> Dict[str, Any]:
+def get_unique_evaluation_filename(provided_name=None):
+    """
+    Generate a unique filename for evaluation results.
+    
+    Args:
+        provided_name: Optional name provided by the user
+        
+    Returns:
+        A unique filename for the evaluation results
+    """
+    if provided_name:
+        # If a name is provided, ensure it has the .json extension
+        if not provided_name.endswith('.json'):
+            provided_name += '.json'
+        
+        # Check if a file with this name already exists
+        full_path = os.path.join(EVAL_DIR, provided_name)
+        if not os.path.exists(full_path):
+            return provided_name
+        else:
+            logger.warning(f"File {provided_name} already exists. Generating a unique name instead.")
+    
+    # If no name is provided or the provided name already exists, generate a unique name
+    # Count the number of existing evaluation result files
+    existing_files = [f for f in os.listdir(EVAL_DIR) if f.startswith('evaluation_results_') and f.endswith('.json')]
+    
+    # Find the highest number used so far
+    highest_num = 0
+    for file in existing_files:
+        try:
+            # Extract the number from filenames like "evaluation_results_1.json"
+            num = int(file.replace('evaluation_results_', '').replace('.json', ''))
+            highest_num = max(highest_num, num)
+        except ValueError:
+            continue
+    
+    # Generate a new filename with the next number
+    return f"evaluation_results_{highest_num + 1}.json"
+
+def evaluate_rag_system(qa_pairs: List[Dict[str, Any]], filename=None) -> Dict[str, Any]:
     """
     Evaluate the RAG system using filtered QA pairs.
     
     Args:
-        qa_pairs: List of high-quality QA pairs to use for evaluation
-        
+        qa_pairs: List of QA pairs that are tagged after filtering to use for evaluation
+        filename: Optional filename for the evaluation results. If not provided, a unique name will be generated.
     Returns:
         Dictionary with evaluation results
     """
     logger.info(f"Evaluating RAG system with {len(qa_pairs)} QA pairs...")
     
+    
+    # Define the evaluation prompt template
+    evaluation_prompt = """###Task Description:
+    An instruction (might include an Input inside it), a response to evaluate, a reference answer that gets a score of 5, and a score rubric representing a evaluation criteria are given.
+    1. Write a detailed feedback that assess the quality of the response strictly based on the given score rubric, not evaluating in general.
+    2. After writing a feedback, write a score that is an integer between 1 and 5. You should refer to the score rubric.
+    3. The output format should look as follows: \"Feedback: {{write a feedback for criteria}} [RESULT] {{an integer number between 1 and 5}}\"
+    4. Please do not generate any other opening, closing, and explanations. Be sure to include [RESULT] in your output.
+
+    ###The instruction to evaluate:
+    {instruction}
+
+    ###Response to evaluate:
+    {response}
+
+    ###Reference Answer (Score 5):
+    {reference_answer}
+
+    ###Score Rubrics:
+    [Is the response correct, accurate, and factual based on the reference answer?]
+    Score 1: The response is completely incorrect, inaccurate, and/or not factual.
+    Score 2: The response is mostly incorrect, inaccurate, and/or not factual.
+    Score 3: The response is somewhat correct, accurate, and/or factual.
+    Score 4: The response is mostly correct, accurate, and factual.
+    Score 5: The response is completely correct, accurate, and factual.
+
+    ###Feedback:"""
+
+    evaluation_prompt_template = ChatPromptTemplate.from_messages([
+        SystemMessage(content="You are a fair evaluator model."),
+        HumanMessagePromptTemplate.from_template(evaluation_prompt)
+    ])
+
     results = {
-        "qa_results": [],
-        "metrics": {
-            "relevance": 0.0,
-            "faithfulness": 0.0,
-            "context_precision": 0.0,
-            "answer_correctness": 0.0,
-            "overall_score": 0.0
+        "qa_pairs": [],
+        "summary": {
+            "total_pairs": len(qa_pairs),
+            "average_score": 0,
+            "scores_distribution": {}
         }
     }
+    
+    total_score = 0
+    scores_distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
     
     for i, qa_pair in enumerate(qa_pairs):
         question = qa_pair["question"]
         reference_answer = qa_pair["answer"]
-        qa_id = qa_pair.get("id", i+1)  # Use existing ID or fallback to index+1
+        qa_id = qa_pair.get("id", i+1)
         
         logger.info(f"Evaluating question {i+1}/{len(qa_pairs)} (ID: {qa_id}): {question[:50]}...")
         
@@ -288,80 +411,88 @@ def evaluate_rag_system(qa_pairs: List[Dict[str, Any]]) -> Dict[str, Any]:
             rag_answer = rag_response["response_text"]
             retrieved_sources = rag_response["sources"]
             
-            # Create evaluation prompt
-            eval_prompt = ChatPromptTemplate.from_messages([
-                ("system", """Evaluate the RAG system's answer based on the following criteria:
-                1. Relevance (0-10): How relevant is the generated answer to the question?
-                2. Faithfulness (0-10): Does the answer contain hallucinations or make claims not supported by the retrieved context?
-                3. Context Precision (0-10): Were the retrieved contexts helpful and necessary for answering the question?
-                4. Answer Correctness (0-10): How correct is the generated answer compared to the reference answer?
-                
-                Format your response exactly as follows:
-                RELEVANCE: [score]
-                FAITHFULNESS: [score]
-                CONTEXT_PRECISION: [score]
-                ANSWER_CORRECTNESS: [score]
-                OVERALL: [average score]
-                REASONING: [brief explanation of your evaluation]"""),
-                ("human", f"QUESTION: {question}\n\nRAG SYSTEM ANSWER: {rag_answer}\n\nREFERENCE ANSWER: {reference_answer}")
-            ])
+            evaluation_prompt_formatted = evaluation_prompt_template.format(
+                instruction=question,
+                response=rag_answer,
+                reference_answer=reference_answer
+            )
             
-            # Get evaluation results
-            evaluation = llm_ollama.invoke(eval_prompt.format())
+            # Get evaluation results using the evaluation_prompt
+            evaluation_result = llm_ollama.invoke(evaluation_prompt_formatted)
             
-            # Parse scores
-            scores = {}
-            lines = evaluation.strip().split('\n')
+            # Parse the evaluation result
+            feedback = ""
+            score = 0
             
-            for line in lines:
-                if ':' in line:
-                    key, value = line.split(':', 1)
-                    key = key.strip().lower()
-                    
-                    if key in ['relevance', 'faithfulness', 'context_precision', 'answer_correctness', 'overall']:
-                        try:
-                            scores[key] = float(value.strip()) / 10  # Convert to 0-1 scale
-                        except ValueError:
-                            scores[key] = 0.0
+            # Extract feedback and score from the result
+            result_text = evaluation_result.content if hasattr(evaluation_result, 'content') else str(evaluation_result)
             
-            # Check if we have an overall score
-            if 'overall' not in scores and len(scores) > 0:
-                scores['overall'] = sum(scores.values()) / len(scores)
+            if "[RESULT]" in result_text:
+                feedback, score_part = result_text.split("[RESULT]")
+                feedback = feedback.replace("Feedback:", "").strip()
+                try:
+                    score = int(score_part.strip())
+                    # Ensure score is between 1 and 5
+                    score = max(1, min(5, score))
+                except ValueError:
+                    logger.warning(f"Could not parse score from evaluation result: {score_part}")
+                    score = 0
+            else:
+                feedback = result_text
+                logger.warning(f"Evaluation result did not contain [RESULT] marker: {result_text[:100]}...")
             
-            # Add evaluation result
-            result = {
+            # Update scores distribution
+            if 1 <= score <= 5:
+                scores_distribution[score] += 1
+                total_score += score
+            
+            # Store evaluation results for this QA pair
+            pair_result = {
                 "id": qa_id,
                 "question": question,
                 "reference_answer": reference_answer,
                 "rag_answer": rag_answer,
                 "retrieved_sources": retrieved_sources,
-                "expected_source": qa_pair["chunk_id"],
-                "scores": scores,
-                "evaluation": evaluation
+                "evaluation": {
+                    "feedback": feedback,
+                    "score": score
+                }
             }
             
-            results["qa_results"].append(result)
-            
-            # Update metrics
-            for metric in ["relevance", "faithfulness", "context_precision", "answer_correctness", "overall"]:
-                results["metrics"][metric] += scores.get(metric, 0)
-            
-            logger.info(f"Evaluated QA pair {qa_id} - Overall score: {scores.get('overall', 0):.2f}")
+            results["qa_pairs"].append(pair_result)
+            logger.info(f"Evaluation score for QA pair {qa_id}: {score}/5")
             
         except Exception as e:
             logger.error(f"Error evaluating QA pair {qa_id}: {str(e)}")
+            # Add failed evaluation to results
+            pair_result = {
+                "id": qa_id,
+                "question": question,
+                "reference_answer": reference_answer,
+                "error": str(e)
+            }
+            results["qa_pairs"].append(pair_result)
     
-    # Calculate average metrics
-    num_pairs = len(results["qa_results"])
-    if num_pairs > 0:
-        for metric in results["metrics"]:
-            results["metrics"][metric] /= num_pairs
+    # Calculate average score
+    if len(qa_pairs) > 0:
+        results["summary"]["average_score"] = total_score / len(qa_pairs)
+    
+    # Add scores distribution to summary
+    results["summary"]["scores_distribution"] = scores_distribution
+    
+    # Generate a unique filename if none is provided
+    result_filename = get_unique_evaluation_filename(filename)
+    result_filepath = os.path.join(EVAL_DIR, result_filename)
     
     # Save evaluation results to file
-    with open(EVALUATION_RESULTS_PATH, 'w') as f:
+    with open(result_filepath, 'w') as f:
         json.dump(results, f, indent=2)
     
-    logger.info(f"Evaluation complete. Overall score: {results['metrics']['overall_score']:.2f}")
+    logger.info(f"Evaluation complete. Results saved to {result_filename}. Average score: {results['summary']['average_score']:.2f}/5")
+    
+    # Add the filename to the results
+    results["filename"] = result_filename
+    
     return results
 
 def load_or_generate_qa_pairs(force_regenerate: bool = False, total_pairs: int = 10, document_sources: List[str] = None) -> List[Dict[str, Any]]:
@@ -372,7 +503,11 @@ def load_or_generate_qa_pairs(force_regenerate: bool = False, total_pairs: int =
     return generate_qa_pairs(total_pairs, document_sources)
 
 def load_or_filter_qa_pairs(qa_pairs: List[Dict[str, Any]], force_refilter: bool = False) -> List[Dict[str, Any]]:
-    """Load existing filtered QA pairs from file or filter again if needed"""
+    """
+    Load existing filtered QA pairs from file or filter again if needed.
+    QA pairs are filtered based on groundedness and standalone ratings,
+    requiring a score of at least 4 out of 5 for both criteria.
+    """
     if not force_refilter and os.path.exists(FILTERED_QA_PAIRS_PATH):
         with open(FILTERED_QA_PAIRS_PATH, 'r') as f:
             return json.load(f)
@@ -382,8 +517,8 @@ def run_full_evaluation(
     force_regenerate_qa: bool = False,
     force_refilter_qa: bool = False,
     total_pairs: int = 10,
-    min_quality_score: float = 0.7,
-    document_sources: List[str] = None
+    document_sources: List[str] = None,
+    filename: str = None
 ) -> Dict[str, Any]:
     """
     Run the full evaluation pipeline, from generating QA pairs to evaluating the RAG system.
@@ -392,8 +527,8 @@ def run_full_evaluation(
         force_regenerate_qa: Whether to regenerate QA pairs even if they already exist
         force_refilter_qa: Whether to refilter QA pairs even if filtered pairs already exist
         total_pairs: Total number of QA pairs to generate
-        min_quality_score: Minimum quality score (0-1) for a QA pair to pass the filter
         document_sources: Optional list of document sources to filter by. If None, all documents are used.
+        filename: Optional filename for the evaluation results. If not provided, a unique name will be generated.
         
     Returns:
         Dictionary with evaluation results
@@ -401,10 +536,10 @@ def run_full_evaluation(
     # Step 1: Generate or load QA pairs
     qa_pairs = load_or_generate_qa_pairs(force_regenerate_qa, total_pairs, document_sources)
     
-    # Step 2: Filter or load filtered QA pairs
-    filtered_pairs = load_or_filter_qa_pairs(qa_pairs, force_refilter_qa)
+    # Step 2: Filter QA pairs based on quality
+    filtered_qa_pairs = load_or_filter_qa_pairs(qa_pairs, force_refilter_qa)
     
-    # Step 3: Evaluate RAG system
-    results = evaluate_rag_system(filtered_pairs)
+    # Step 3: Evaluate RAG system using filtered QA pairs
+    evaluation_results = evaluate_rag_system(filtered_qa_pairs, filename)
     
-    return results 
+    return evaluation_results 
