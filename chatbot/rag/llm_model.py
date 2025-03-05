@@ -4,10 +4,9 @@ from .vectordb import get_embedding_function, get_embedding_function_ollama
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_chroma import Chroma
+from langchain_core.prompts import ChatPromptTemplate
 
-from langchain.chains.history_aware_retriever import create_history_aware_retriever
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains import create_retrieval_chain
+from langchain_core.runnables import chain
 from langchain_core.prompts import MessagesPlaceholder
 
 from django.conf import settings
@@ -48,16 +47,11 @@ model = HuggingFaceEndpoint(
 from langchain_ollama import OllamaLLM
 '''
 llm_ollama = OllamaLLM(model="llama3.1", base_url="http://host.docker.internal:11434")
-# llm_ollama = OllamaLLM(model="deepseek-r1:8b", base_url="http://host.docker.internal:11434")
-def get_context(vector_db, query_text, CLOSEST_K_CHUNK: int = 5, SIMILARITY_THRESHOLD: float = 0.5):
-    logger.info(f"Searching for context with query: '{query_text}' (k={CLOSEST_K_CHUNK}, threshold={SIMILARITY_THRESHOLD})")
-    
+
+@chain
+def get_context(chain_object, CLOSEST_K_CHUNK: int = 5, SIMILARITY_THRESHOLD: float = 0.5):
     # Search the DB.
-    results = vector_db.similarity_search_with_score(query_text, k=CLOSEST_K_CHUNK)
-    
-    logger.info("Search results before filtering:")
-    for doc, score in results:
-        logger.info(f"Document ID: {doc.metadata.get('id', 'N/A')} - Similarity Score: {score:.4f}")
+    results = chain_object["vector_db"].similarity_search_with_score(chain_object["query_text"], k=CLOSEST_K_CHUNK)
 
     filtered_results = [
         (doc, score) for doc, score in results if score-1 <= SIMILARITY_THRESHOLD
@@ -68,19 +62,19 @@ def get_context(vector_db, query_text, CLOSEST_K_CHUNK: int = 5, SIMILARITY_THRE
     if filtered_results:
         context_text = "\n\n---\n\n".join([ doc.page_content for doc,_score in filtered_results])
     else:
-        logger.warning("No matching documents found within similarity threshold")
         context_text = "There is nothing found in the database as a context."
-    return {"context":context_text, "sources":sources}
-
+    return {"context":context_text,"sources":sources}
 
 def generate_conversation_name(query: str, response: str) -> str:
-    prompt_template = ChatPromptTemplate.from_messages([
+    prompt = ChatPromptTemplate.from_messages([
         ("system", "Generate a short, meaningful title (maximum 6 words) for a conversation based on the following query and response. The title should capture the main topic or intent of the conversation. Only return the title, nothing else."),
-        ("human", f"Query: {query}\nResponse: {response}")
+        ("human", f"{query}"),
+        ("ai", f"{response}")
     ])
     
     try:
-        name = llm_ollama.invoke(prompt_template.format())
+        chain = prompt | llm_ollama
+        name = chain.invoke({"query":query, "response":response})
         # Clean up the name - remove quotes if present and limit length
         name = name.strip('"\'').strip()
         if len(name) > 50:  # Set a reasonable maximum length
@@ -90,47 +84,35 @@ def generate_conversation_name(query: str, response: str) -> str:
         print("Error generating conversation name:", e)
         return "New Chat"  # Fallback name
 
+
 def query_llm(query_text: str, chat_history):
-    start_time = time.time()
     
-    # Initialize embedding function and DB
-    logger.info("Initializing embedding function and ChromaDB...")
-    embedding_start = time.time()
     embedding_function = get_embedding_function_ollama()
-    db = Chroma(
+    vector_db = Chroma(
         persist_directory = settings.CHROMA_PATH,
         embedding_function = embedding_function
     )
-    logger.info(f"Embedding initialization took: {time.time() - embedding_start:.2f} seconds")
     
     # Get context
-    context_start = time.time()
-    context_obj = get_context(db, query_text)
-    logger.info(f"Context retrieval took: {time.time() - context_start:.2f} seconds")
+    context_obj = get_context.invoke({"vector_db":vector_db, "query_text":query_text})
     
     # Create prompt
-    prompt_start = time.time()
-    prompt_template = ChatPromptTemplate.from_messages([
+    prompt= ChatPromptTemplate.from_messages([
         ("system","The following is the context fetched from the database. Mention your sources if possible in your answer.: \n{context}\n"),
         ("system","The following is a friendly conversation between a human and an AI. If the AI does not know the answer to a question, it truthfully says it does not know."),
         MessagesPlaceholder(variable_name="chat_history"),
         ("system","AI is instructed only to answer the below question using the conversation history and the context.\n"),
         ("human", "{input}"),
         ("ai","")
-    ])
-    prompt = prompt_template.format(context=context_obj["context"], input=query_text, chat_history=chat_history)
-    logger.info(f"Prompt creation took: {time.time() - prompt_start:.2f} seconds")
+    ])    
     
-    # LLM inference
+    chain = prompt | llm_ollama
+
     llm_start = time.time()
     try:
-        response = llm_ollama.invoke(prompt)
-        logger.info(f"LLM inference took: {time.time() - llm_start:.2f} seconds")
+        response = chain.invoke({"input":query_text, "context":context_obj["context"], "chat_history":chat_history})
+        logger.info(f"LLM invoke call took: {time.time() - llm_start:.1f} seconds")
     except Exception as e:
-        logger.error(f"Error invoking LLM: {str(e)}")
         print("Error invoking chain:", e)
         
-    total_time = time.time() - start_time
-    logger.info(f"Total query_llm execution time: {total_time:.2f} seconds")
-    
-    return {"response_text":response, "sources":context_obj["sources"]}
+    return {"response_text":response, "sources": context_obj["sources"]}
