@@ -24,17 +24,15 @@ logger = logging.getLogger(__name__)
 @permission_classes([IsAuthenticated])
 def query(request):
     start_time = time.time()
-    
+
     query_text = request.data.get('query')
     conversation_id = request.data.get('conversation_id')
-    logger.info(f"Processing query request - conversation_id: {conversation_id}")
     
     # Validate input
     if not query_text.strip():
         return Response({"error": "Your query is empty!"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Conversation handling
-    conversation_start = time.time()
     conversation = None
     is_new_conversation = False
     if conversation_id:
@@ -49,10 +47,8 @@ def query(request):
             user=request.user
         )
         is_new_conversation = True
-    logger.info(f"Conversation handling took: {time.time() - conversation_start:.2f} seconds")
 
     # Chat history processing
-    history_start = time.time()
     queries = conversation.queries.all()
     chat_history = []
     if len(queries) == 0:
@@ -60,16 +56,12 @@ def query(request):
     for query in queries:
         chat_history.append(HumanMessage(content=query.query_text))
         chat_history.append(AIMessage(content=query.response_text))
-    logger.info(f"Chat history processing took: {time.time() - history_start:.2f} seconds")
     logger.info(f"Number of messages in history: {len(chat_history)}")
 
     # LLM Query
-    llm_start = time.time()
     response = query_llm(query_text, chat_history)
-    logger.info(f"LLM query took: {time.time() - llm_start:.2f} seconds")
 
     # Database operations
-    db_start = time.time()
     comma_seperated_sources = ",".join(response["sources"])
     query_instance = Query.objects.create(
         user=request.user,
@@ -84,7 +76,6 @@ def query(request):
     
     conversation.queries.add(query_instance)
     conversation.update_timestamps()
-    logger.info(f"Database operations took: {time.time() - db_start:.2f} seconds")
 
     # Prepare response
     response["conversation_id"] = conversation.id
