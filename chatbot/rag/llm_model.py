@@ -46,8 +46,10 @@ model = HuggingFaceEndpoint(
 # To run on local machine with Ollama (ollama needs to be installed)
 from langchain_ollama import OllamaLLM
 '''
-llm_ollama = OllamaLLM(model="llama3.1", base_url="http://host.docker.internal:11434")
 
+model_name = "llama3.1"
+# model_name = "deepseek-r1:8b"
+llm_ollama = OllamaLLM(model=model_name, base_url="http://host.docker.internal:11434")
 @chain
 def get_context(chain_object, CLOSEST_K_CHUNK: int = 5, SIMILARITY_THRESHOLD: float = 0.5):
     # Search the DB.

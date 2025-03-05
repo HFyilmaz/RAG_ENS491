@@ -18,7 +18,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize the LLM
-llm_ollama = OllamaLLM(model="llama3.1", base_url="http://host.docker.internal:11434")
+model_name = "llama3.1"
+# model_name = "deepseek-r1:8b"
+llm_ollama = OllamaLLM(model=model_name, base_url="http://host.docker.internal:11434")
 
 # Paths for storing evaluation data
 EVAL_DIR = os.path.join(settings.BASE_DIR, "rag", "evaluation_data")
