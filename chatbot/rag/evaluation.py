@@ -12,13 +12,16 @@ from langchain_chroma import Chroma
 
 from .vectordb import get_embedding_function_ollama, split_documents, load_documents
 from .llm_model import get_context, query_llm
+from dotenv import load_dotenv
 
+
+load_dotenv()
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize the LLM
-model_name = "llama3.1"
+model_name = os.getenv("MODEL_NAME")
 # model_name = "deepseek-r1:8b"
 llm_ollama = OllamaLLM(model=model_name, base_url="http://host.docker.internal:11434")
 

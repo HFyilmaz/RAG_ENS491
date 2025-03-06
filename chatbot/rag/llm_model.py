@@ -47,7 +47,7 @@ model = HuggingFaceEndpoint(
 from langchain_ollama import OllamaLLM
 '''
 
-model_name = "llama3.1"
+model_name = os.getenv("MODEL_NAME")
 # model_name = "deepseek-r1:8b"
 llm_ollama = OllamaLLM(model=model_name, base_url="http://host.docker.internal:11434")
 @chain

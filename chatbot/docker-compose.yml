@@ -42,7 +42,7 @@ services:
 
   frontend:
     build:
-      context: ../../Frontend/chatbot
+      context: ../../RAG-FRONTEND/chatbot
     container_name: frontend_app
     ports:
       - "80:80"
