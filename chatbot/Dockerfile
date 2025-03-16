@@ -19,7 +19,7 @@ COPY . .
 
 # Copy the entrypoint script into the container root
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x entrypoint.sh
 
 # Expose the port for Django
 EXPOSE 8000
