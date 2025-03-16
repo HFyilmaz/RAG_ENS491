@@ -56,8 +56,8 @@ llm_ollama = OllamaLLM(model=model_name, base_url="http://host.docker.internal:1
 
 
 @chain
-def get_context(chain_object, CLOSEST_K_CHUNK: int = 100, OUTPUT_M_CHUNK: int = 10, SIMILARITY_THRESHOLD: float = 0.5):
-    # Retrieve 50 candidate chunks using the bi-encoder method.
+def get_context(chain_object, CLOSEST_K_CHUNK: int = 100, OUTPUT_M_CHUNK: int = 10, SIMILARITY_THRESHOLD: float = 0):
+    # Retrieve candidate chunks using the bi-encoder method.
     results = chain_object["vector_db"].similarity_search_with_score(chain_object["query_text"], k=CLOSEST_K_CHUNK)
 
     # Prepare pairs for cross-encoder: (query, candidate page_content)
@@ -74,10 +74,14 @@ def get_context(chain_object, CLOSEST_K_CHUNK: int = 100, OUTPUT_M_CHUNK: int = 
     ranked = sorted(zip(results, ce_scores), key=lambda x: x[1], reverse=True)
 
     print("Length of ranked orders:", len(ranked))
-    # Select the top M candidates.
-    top_rank = ranked[:OUTPUT_M_CHUNK]
 
-    # Reordering Step
+    # Filter candidates based on the SIMILARITY_THRESHOLD using the cross-encoder score.
+    filtered_rank = [item for item in ranked if item[1] >= SIMILARITY_THRESHOLD]
+
+    # Select the top candidates from those that pass the threshold.
+    top_rank = filtered_rank[:OUTPUT_M_CHUNK]
+
+    # Reordering Step using LongContextReorder
     reorderer = LongContextReorder()
     # Extract the texts from the top_rank candidates.
     top_texts = [doc.page_content for ((doc, _), _) in top_rank]
