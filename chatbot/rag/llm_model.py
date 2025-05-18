@@ -4,7 +4,7 @@ from .vectordb import get_embedding_function, get_embedding_function_ollama
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_chroma import Chroma
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 from langchain_core.runnables import chain
 from langchain_core.prompts import MessagesPlaceholder
@@ -54,6 +54,7 @@ model_name = os.getenv("MODEL_NAME")
 # model_name = "deepseek-r1:8b"
 llm_ollama = OllamaLLM(model=model_name, base_url="http://host.docker.internal:11434")
 
+cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L6-v2")
 
 @chain
 def get_context(chain_object, CLOSEST_K_CHUNK: int = 100, OUTPUT_M_CHUNK: int = 10, SIMILARITY_THRESHOLD: float = 0):
@@ -63,9 +64,13 @@ def get_context(chain_object, CLOSEST_K_CHUNK: int = 100, OUTPUT_M_CHUNK: int = 
     # Prepare pairs for cross-encoder: (query, candidate page_content)
     pairs = [(chain_object["query_text"], doc.page_content) for doc, _ in results]
 
-    # Initialize the cross-encoder (local model)
-    cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L6-v2")
-
+    # early exit if no candidates, to avoid IndexError in cross_encoder.predict()
+    if not pairs:
+        logger.warning("No candidate pairs for query: %s", chain_object["query_text"])
+        return {
+            "context": "There is nothing found in the database as a context.",
+            "sources": []
+        }
     # Get cross-encoder scores for each candidate.
     ce_scores = cross_encoder.predict(pairs)
 
@@ -111,7 +116,7 @@ def generate_conversation_name(query: str, response: str) -> str:
         ("human", f"{query}"),
         ("ai", f"{response}")
     ])
-    
+
     try:
         chain = prompt | llm_ollama
         name = chain.invoke({"query":query, "response":response})
@@ -126,16 +131,16 @@ def generate_conversation_name(query: str, response: str) -> str:
 
 
 def query_llm(query_text: str, chat_history):
-    
+
     embedding_function = get_embedding_function_ollama()
     vector_db = Chroma(
         persist_directory = settings.CHROMA_PATH,
         embedding_function = embedding_function
     )
-    
+
     # Get context
     context_obj = get_context.invoke({"vector_db":vector_db, "query_text":query_text})
-    
+
     # Create prompt
     prompt= ChatPromptTemplate.from_messages([
         ("system","The following is the context fetched from the database. Mention your sources if possible in your answer.: \n{context}\n"),
@@ -144,8 +149,8 @@ def query_llm(query_text: str, chat_history):
         ("system","AI is instructed only to answer the below question using the conversation history and the context.\n"),
         ("human", "{input}"),
         ("ai","")
-    ])    
-    
+    ])
+
     chain = prompt | llm_ollama
 
     llm_start = time.time()
@@ -154,5 +159,5 @@ def query_llm(query_text: str, chat_history):
         logger.info(f"LLM invoke call took: {time.time() - llm_start:.1f} seconds")
     except Exception as e:
         print("Error invoking chain:", e)
-        
+
     return {"response_text":response, "sources": context_obj["sources"]}
